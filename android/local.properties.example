@@ -1,0 +1,10 @@
+# ============================================================
+#  岁时 · 本地 Android SDK 路径模板
+#
+#  用法：复制本文件为同目录下的 local.properties，填入本机 SDK 路径。
+#  真正的 local.properties 已被忽略，不会进入版本库。
+# ============================================================
+
+# Windows 示例：sdk.dir=D:/Android/Sdk
+# macOS  示例：sdk.dir=/Users/yourname/Library/Android/sdk
+sdk.dir=

@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>纪念日 App · 需求梳理与设计方案</title>
+<style>
+:root{
+  --paper:#F7F4EF; --canvas:#FBF9F6; --surface:#FFFFFF; --surface2:#FDFCFA; --inset:#F2EDE5;
+  --ink:#2B241F; --ink2:#6B6055; --ink3:#9A8D80; --ink4:#C9BEB0;
+  --line:#E3DCD1; --line2:#EBE5DB; --line3:#F1ECE4;
+  --brand:#8C5A34; --brand-deep:#6B4224; --brand-bg:#F3E9DE;
+  --sage:#5F7355; --sage-bg:#EDF1E9; --amber:#926521; --amber-bg:#FBF1DF; --clay:#AA523D; --clay-bg:#F9EAE5;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC","STSong","SimSun",Georgia,serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--serif);font-size:16px;line-height:2;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px 96px}
+
+.cover{padding:88px 0 56px;border-bottom:1px solid var(--line)}
+.eyebrow{font-family:var(--sans);font-size:12px;letter-spacing:.16em;color:var(--brand);text-transform:uppercase}
+.cover h1{font-size:64px;line-height:1.1;margin:20px 0 0;font-weight:400;letter-spacing:.04em}
+.cover .lede{font-size:19px;color:var(--ink2);margin:16px 0 0;line-height:1.9;max-width:32em}
+.cover .meta{font-family:var(--sans);display:flex;flex-wrap:wrap;gap:10px;margin-top:32px}
+.cover .meta span{font-size:12px;color:var(--ink2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 13px}
+
+section{padding-top:72px}
+.sec-head{display:flex;align-items:baseline;gap:16px;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:36px}
+.sec-num{font-family:var(--sans);font-size:12px;color:var(--brand);letter-spacing:.12em}
+.sec-head h2{font-size:26px;font-weight:400;margin:0;letter-spacing:.03em}
+.sec-head .note{font-family:var(--sans);font-size:13px;color:var(--ink3);margin-left:auto}
+h3{font-size:19px;font-weight:400;margin:44px 0 14px;letter-spacing:.03em}
+h4{font-family:var(--sans);font-size:14px;font-weight:500;margin:28px 0 10px}
+p{margin:0 0 20px}
+p.small{font-size:15px;color:var(--ink2)}
+ul.plain{margin:0 0 20px;padding-left:22px}
+ul.plain li{margin-bottom:10px;color:var(--ink2);font-size:15px;line-height:1.9}
+ul.plain li b{color:var(--ink);font-weight:500}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;background:var(--inset);border-radius:5px;padding:2px 6px;color:var(--brand-deep)}
+
+table{width:100%;border-collapse:collapse;font-family:var(--sans);margin:8px 0 24px}
+th{text-align:left;font-size:12px;font-weight:500;color:var(--ink3);padding:0 16px 10px 0;border-bottom:1px solid var(--line)}
+td{padding:14px 16px 14px 0;border-bottom:1px solid var(--line3);vertical-align:top;font-size:14px;line-height:1.75;color:var(--ink2)}
+td b{color:var(--ink);font-weight:500}
+td.k{color:var(--ink);font-weight:500;white-space:nowrap;width:1%}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+
+.callout{
+  background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--brand);
+  border-radius:0 12px 12px 0;padding:20px 24px;margin:24px 0;font-size:15px;color:var(--ink2);line-height:1.9;
+}
+.callout b{color:var(--ink);font-weight:500}
+.callout.warn{border-left-color:var(--amber);background:var(--amber-bg)}
+.callout.good{border-left-color:var(--sage);background:var(--sage-bg)}
+
+.screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(298px,1fr));gap:56px 28px;justify-items:center}
+.fig{display:flex;flex-direction:column;align-items:center;width:100%}
+.shot{display:flex;justify-content:center}
+.fig figcaption{font-family:var(--sans);margin-top:20px;width:100%;max-width:280px;text-align:left;border-top:1px solid var(--line);padding-top:12px}
+.fig .no{font-size:11px;color:var(--brand);letter-spacing:.1em}
+.fig .nm{font-size:14px;font-weight:500;margin-top:4px}
+.fig .ds{font-size:12px;color:var(--ink3);line-height:1.7;margin-top:5px}
+
+.ph{
+  width:280px;height:606px;background:#FBF9F6;border:1px solid #E3DCD1;border-radius:32px;
+  display:flex;flex-direction:column;overflow:hidden;flex:0 0 auto;
+  font-family:var(--sans);font-size:11.5px;color:#2B241F;line-height:1.5;
+  box-shadow:0 1px 2px rgba(43,36,31,.04),0 14px 36px rgba(43,36,31,.09);
+}
+.ph.dark{background:#1C1A15;border-color:#3A352B;color:#F2EBDF}
+.ph .sb{height:27px;display:flex;align-items:center;justify-content:space-between;padding:0 17px;flex:0 0 auto;font-size:11px;font-weight:500}
+.ph .sb .rt{display:flex;align-items:center;gap:5px}
+.ph .sig{display:flex;gap:2px;align-items:flex-end;height:8px}
+.ph .sig i{display:block;width:2.5px;background:currentColor;border-radius:1px}
+.ph .sig i:nth-child(1){height:3px}.ph .sig i:nth-child(2){height:5px}.ph .sig i:nth-child(3){height:8px}
+.ph .bat{width:16px;height:8px;border:1px solid currentColor;border-radius:2.5px;position:relative;opacity:.45}
+.ph .bat::after{content:"";position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:9px;background:currentColor;border-radius:1px}
+.ph .bd{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.ph .hd{font-family:var(--serif);font-size:22px;font-weight:400;letter-spacing:.04em;line-height:1.25}
+.ph .sub{color:#9A8D80;margin-top:3px}
+.ph.dark .sub{color:#8A7F6E}
+.ph .card{background:#fff;border:0.5px solid var(--line2);border-radius:14px;overflow:hidden}
+.ph.dark .card{background:#242118;border-color:#3A352B}
+.ph .row{display:flex;gap:9px;padding:10px 11px;align-items:center;border-bottom:0.5px solid #F1ECE4}
+.ph.dark .row{border-bottom-color:#2C2821}
+.ph .row:last-child{border-bottom:0}
+.ph .dot{width:7px;height:7px;border-radius:999px;flex:0 0 auto}
+.ph .tg{display:inline-flex;align-items:center;gap:3px;background:var(--brand-bg);border-radius:6px;padding:2px 6px;color:var(--brand)}
+.ph.dark .tg{background:#3A2F20;color:#C9985C}
+.ph .chip{padding:5px 11px;border-radius:999px;background:#fff;border:0.5px solid var(--line);color:#6B6055;white-space:nowrap}
+.ph .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.ph.dark .chip{background:#242118;border-color:#3A352B;color:#B5AA99}
+.ph.dark .chip.on{background:#C9985C;border-color:#C9985C;color:#1C1A15}
+.ph .seg{display:flex;background:#F2EDE5;border-radius:9px;padding:2px}
+.ph .seg span{padding:4px 9px;border-radius:7px;color:#9A8D80}
+.ph .seg span.on{background:#fff;color:#2B241F;font-weight:500}
+.ph.dark .seg{background:#302C23}
+.ph.dark .seg span.on{background:#3A352B;color:#F2EBDF}
+.ph .grp{font-size:11px;color:#9A8D80;letter-spacing:.08em;margin:14px 17px 6px}
+.ph .fr{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border-bottom:0.5px solid #F1ECE4;align-items:center}
+.ph.dark .fr{border-bottom-color:#2C2821}
+.ph .fr:last-child{border-bottom:0}
+.ph .fk{color:#9A8D80;flex:0 0 auto}
+.ph .fv{font-weight:500;text-align:right}
+.tabbar{margin-top:auto;height:60px;border-top:0.5px solid var(--line2);background:#fff;display:flex;align-items:center;padding:0 2px 6px;flex:0 0 auto}
+.ph.dark .tabbar{background:#242118;border-top-color:#3A352B}
+.tabbar .tb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:#A99C8E;font-size:10px}
+.ph.dark .tabbar .tb{color:#7A7264}
+.tabbar .tb.on{color:var(--brand)}
+.ph.dark .tabbar .tb.on{color:#C9985C}
+.fab{width:38px;height:38px;border-radius:999px;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;margin-top:-14px;box-shadow:0 4px 12px rgba(140,90,52,.35)}
+.ph.dark .fab{background:#C9985C;color:#1C1A15;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+
+.plan-block{border-top:1px solid var(--line);padding-top:44px;margin-top:64px}
+.plan-head{display:flex;align-items:baseline;gap:14px;margin-bottom:8px}
+.plan-tag{font-family:var(--sans);font-size:11px;letter-spacing:.1em;color:var(--brand);background:var(--brand-bg);border-radius:6px;padding:4px 10px}
+.plan-head h3{margin:0}
+.plan-sub{font-family:var(--sans);font-size:13px;color:var(--ink3);margin:0 0 28px}
+.traits{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0 8px}
+.trait{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.trait b{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--ink3);display:block}
+.trait span{font-family:var(--sans);font-size:14px;color:var(--ink);display:block;margin-top:5px;line-height:1.6}
+
+.verdict{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:28px 32px;margin-top:36px}
+.verdict .vh{font-family:var(--sans);font-size:12px;letter-spacing:.14em;color:var(--brand);text-transform:uppercase;margin-bottom:12px}
+.verdict p{margin-bottom:14px}
+.verdict p:last-child{margin-bottom:0}
+
+footer{margin-top:80px;padding-top:28px;border-top:1px solid var(--line);font-family:var(--sans);font-size:13px;color:var(--ink3)}
+
+@media (max-width:720px){
+  .wrap{padding:0 20px 64px}
+  .cover{padding:56px 0 40px}
+  .cover h1{font-size:44px}
+  .cover .lede{font-size:17px}
+  table{font-size:13px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">纪念日 App &middot; 需求梳理与设计方案 &middot; v0.1 草案</div>
+  <h1>纪念日</h1>
+  <p class="lede">把重要的日子记下来，让一年变得看得见。公历与农历并存，周期与一次性兼收，首页用一枚转动的圆盘，告诉你时间走到了哪里。</p>
+  <div class="meta">
+    <span>技术栈沿用「格物」</span>
+    <span>Expo SDK 57 &middot; 纯本地</span>
+    <span>三版视觉方案待选</span>
+    <span>App 名称待定</span>
+  </div>
+</header>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">01</span>
+    <h2>需求梳理</h2>
+    <span class="note">先把「算什么」定死，再谈「长什么样」</span>
+  </div>
+
+  <h3>产品定位</h3>
+  <p class="small">一句话：<b>一个纯本地的日子记录器</b>——记录生日、纪念日、忌日、周期性安排与一次性的约定，首页用一枚圆形年盘呈现全年的分布与进度。</p>
+  <p class="small">与「格物」的关系：<b>同一套工程骨架与设计语言，不同的主题</b>。格物管「东西放在哪」，纪念日管「日子过到哪」。两者共享 Expo 工程结构、五套主题令牌体系、SQLite 存取规范与视觉基调，但数据模型、信息架构、首页核心组件完全独立。</p>
+
+  <h3>核心概念</h3>
+  <p class="small">整个应用只有一个主实体：<b>一条日子（Event）</b>。所有复杂度都集中在它的两个属性上——<b>用什么历法记</b>、<b>按什么节奏重复</b>。</p>
+  <table>
+    <thead><tr><th>字段</th><th>说明</th><th>取值</th></tr></thead>
+    <tbody>
+      <tr><td class="k">name</td><td>日子名称</td><td>结婚纪念日 / 妈妈生日 / 交房租</td></tr>
+      <tr><td class="k">calendar</td><td><b>历法</b></td><td><code>solar</code> 公历 · <code>lunar</code> 农历</td></tr>
+      <tr><td class="k">repeat</td><td><b>重复规则</b></td><td><code>once</code> 一次性 · <code>yearly</code> 每年 · <code>monthly</code> 每月 · <code>weekly</code> 每周</td></tr>
+      <tr><td class="k">anchor</td><td>锚点日期（原始值）</td><td>公历存 <code>YYYY-MM-DD</code>；农历存 <code>{年,月,日,闰}</code>。<b>永远保存用户填的原始形态</b></td></tr>
+      <tr><td class="k">tone / icon</td><td>视觉标识</td><td>一个颜色 + 一个符号，用于圆盘点与列表区分</td></tr>
+      <tr><td class="k">note</td><td>备注</td><td>可空，纯文本</td></tr>
+      <tr><td class="k">pinned</td><td>置顶</td><td>置顶条目在圆盘上略大一圈</td></tr>
+      <tr><td class="k">notify</td><td>提前提醒</td><td>提前 N 天（0 / 1 / 3 / 7 / 30），<b>是否做本地通知待定</b></td></tr>
+      <tr><td class="k">deleted_at</td><td>软删除</td><td>沿用格物的软删除约定，进回收站可恢复</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <b>一个必须先定下来的存储原则。</b>农历条目<b>不能只存换算后的公历日期</b>。农历八月十五对应哪一天，每隔几年就会变一次；只存公历，等于把「农历八月十五」这个事实降级成了某一年的一次快照，明年就错了。所以数据里存的是<b>原始农历值</b>，每年解析出的公历日期是<b>运行时算出来的缓存</b>，不落库。
+  </div>
+
+  <h3>历法与周期：八种组合的算法约定</h3>
+  <p class="small">「下一次是哪天」这件事，是这类应用里唯一真正会出错的地方。下表把八种组合全部列出，连同边界处理一并定死——这些规则要作为单元测试的用例清单。</p>
+  <table>
+    <thead><tr><th>组合</th><th>示例设定</th><th>「下一次」怎么算</th><th>边界与处理</th></tr></thead>
+    <tbody>
+      <tr><td class="k">公历 · 一次性</td><td>2027-05-20</td><td>就是这一天，固定不动</td><td>已过去则显示「已过去 N 天」</td></tr>
+      <tr><td class="k">公历 · 每年</td><td>5 月 20 日</td><td>今年 5/20；若已过，取明年 5/20</td><td><b>2 月 29 日</b>：非闰年落到 2/28</td></tr>
+      <tr><td class="k">公历 · 每月</td><td>每月 20 日</td><td>本月 20 日；若已过，取下月 20 日</td><td><b>31 日</b>：小月钳到月末（沿用格物 <code>addMonths</code> 的钳制思路）</td></tr>
+      <tr><td class="k">公历 · 每周</td><td>每周三</td><td>本周三；若已过，取下周三</td><td>跨周边界用本地零点比较，避免时区漂移</td></tr>
+      <tr><td class="k">农历 · 一次性</td><td>农历 2026 年八月十五</td><td>换算成固定公历日</td><td>锚点存农历原始值，换算结果不落库</td></tr>
+      <tr><td class="k">农历 · 每年</td><td>农历八月十五</td><td>今年农历八月十五对应哪天；若已过，取下一年</td><td><b>腊月三十</b>遇小月（该年腊月只有廿九）→ 取廿九；<b>闰月</b>如闰四月 → 非闰年退回四月</td></tr>
+      <tr><td class="k">农历 · 每月</td><td>农历每月初一</td><td>本农历月初一对应哪天</td><td>用农历月而非公历月推进</td></tr>
+      <tr><td class="k">农历 · 每周</td><td colspan="3" style="color:var(--clay)">语义不成立——农历不与星期绑定。<b>选择农历时，每周选项置灰不可选。</b></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <b>农历库是这个项目唯一的技术风险点。</b>格物完全没有农历能力，必须新增。两条路：<br>
+    &nbsp;&nbsp;① <b>引入 <code>lunar-javascript</code></b>（6tail 的成熟开源库，纯 JS 无原生依赖，覆盖农历、干支、节气、闰月）——推荐，省下的是最容易出错的那部分工作；<br>
+    &nbsp;&nbsp;② <b>自研 1900&ndash;2100 查表法</b>（约 200 行，体积小到可忽略），但大小月、闰月、节气全靠自己写，回归测试成本高。<br>
+    我倾向 ①：这个库被广泛使用、边界情况经过验证，比自研更可靠。
+  </div>
+
+  <h3>信息架构</h3>
+  <p class="small">比格物少一个 tab。纪念日的数据量通常在几十条量级，不需要单独的「提醒」页——近期要到的日子直接放在首页圆盘下方。<b>四个 tab + 中央突起按钮</b>，与格物的自定义 TabBar 保持一致。</p>
+  <table>
+    <thead><tr><th>位置</th><th>页面</th><th>职责</th></tr></thead>
+    <tbody>
+      <tr><td class="k">1</td><td><b>首页</b></td><td>圆形年盘（主角）+ 下一个日子的大字倒计时 + 近期三条</td></tr>
+      <tr><td class="k">2</td><td><b>全部</b></td><td>列表 / 分组两种视图：按月份、按类型、按历法；搜索与筛选</td></tr>
+      <tr><td class="k">＋</td><td>新建（中央突起）</td><td>单页表单，历法与重复规则用分段控件，日期选择器随历法切换</td></tr>
+      <tr><td class="k">3</td><td><b>日子详情</b></td><td>大字倒计时、原始设定、第几次（如「第 3 个结婚纪念日」）、编辑与删除</td></tr>
+      <tr><td class="k">4</td><td><b>我的</b></td><td>主题切换、提醒设置、数据备份导出、关于</td></tr>
+    </tbody>
+  </table>
+
+  <h3>首页圆盘的功能定义</h3>
+  <p class="small">这是整个应用的核心组件，也是三版方案唯一真正分岔的地方。不论哪一版，<b>它承载的信息是同一套</b>：</p>
+  <table>
+    <thead><tr><th>元素</th><th>含义</th></tr></thead>
+    <tbody>
+      <tr><td class="k">圆周</td><td><b>一年</b>。12 点方向是元旦，顺时针走完 365 天。不滚动、不跨年，永远是「今年」。</td></tr>
+      <tr><td class="k">弧</td><td>年度进度——从元旦扫到今天的这一段。</td></tr>
+      <tr><td class="k">游标</td><td><b>今天</b>在圆周上的位置。</td></tr>
+      <tr><td class="k">圆点</td><td>每条日子在<b>今年</b>的落点。农历条目用其农历年在今年的换算结果定位。</td></tr>
+      <tr><td class="k">点色</td><td>已过去（弱）、30 天内（品牌色，最亮）、更远（中间调）。语义色沿用格物的 sage / amber / clay 三色红线。</td></tr>
+      <tr><td class="k">圆心</td><td>当前焦点条目：名称 + 倒计时。三版方案的差异主要在圆心显示什么。</td></tr>
+      <tr><td class="k">交互</td><td><b>拖动旋转圆盘</b>切换焦点条目；点击圆点直接跳到详情。切换时圆心数字滚动、对应圆点放大。</td></tr>
+    </tbody>
+  </table>
+  <div class="callout good">
+    <b>动效清单（三版共用，这是「流畅」的具体指标）。</b>进场时弧从 0 扫到当前进度（800ms，easeOut）；圆点按日期先后依次淡入放大（间隔 40ms，spring）；拖动旋转跟手（gesture-handler + Reanimated，松手带惯性）；切换焦点时倒计时数字纵向滚动（tabular-nums，避免宽度抖动）；圆盘本身有极缓慢的呼吸感（仅方案 B，周期 6s，幅度 2%）。<b>全部动画走 UI 线程</b>，JS 线程不参与逐帧计算。
+  </div>
+</section>
+
+<section id="plans">
+  <div class="sec-head">
+    <span class="sec-num">02</span>
+    <h2>三版设计方案</h2>
+    <span class="note">同一套信息，三种气质</span>
+  </div>
+  <p class="small">三版的<b>功能完全一致</b>，差异只在视觉语言与圆盘的表现方式。每版给两屏：首页 + 一个次级页。</p>
+
+  <div class="plan-block">
+    <div class="plan-head"><span class="plan-tag">方案 A</span><h3>年轮</h3></div>
+    <p class="plan-sub">暖棕纸感 · 与格物同源 · 浅色为主</p>
+    <p class="small">把「格物」的纸感语言直接延续过来：米白纸底、赭石棕强调、衬线标题。圆盘像一枚安静的年轮——一圈就是一年，今天是一道游标，日子落在环上。圆心显示<b>下一个日子的倒计时</b>。这是三版里最克制、也最不像「又一个工具 App」的一版。</p>
+    <div class="screens">
+      <figure class="fig">
+        <div class="shot"><div class="ph">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:2px 17px 0">
+              <div class="hd">纪念日</div>
+              <div class="sub">6 个日子 &middot; 今年已过 266 天</div>
+            </div>
+            <div style="display:flex;justify-content:center;margin:10px 0 -4px">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="62" fill="#fff" stroke="#E3DCD1" stroke-width="1"/>
+                <circle cx="90" cy="90" r="62" fill="none" stroke="#8C5A34" stroke-width="2.5" stroke-dasharray="284 106" stroke-linecap="round" transform="rotate(-90 90 90)"/>
+                <circle cx="133.4" cy="45.7" r="3.2" fill="#5F7355"/>
+                <circle cx="131.4" cy="136.1" r="4" fill="#8C5A34"/>
+                <circle cx="131.4" cy="136.1" r="7.5" fill="none" stroke="#8C5A34" stroke-width="1" opacity=".35"/>
+                <circle cx="84.2" cy="151.7" r="3.2" fill="#5F7355"/>
+                <circle cx="83.6" cy="28.3" r="3.2" fill="#5F7355"/>
+                <line x1="34.5" y1="97.4" x2="22.6" y2="99" stroke="#AA523D" stroke-width="1.5" stroke-linecap="round"/>
+                <text x="90" y="80" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="10" fill="#9A8D80">下一个</text>
+                <text x="90" y="103" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="24" font-weight="500" fill="#8C5A34">12 天</text>
+                <text x="90" y="120" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="10" fill="#6B6055">结婚纪念日</text>
+              </svg>
+            </div>
+            <div style="margin:0 17px">
+              <div class="card">
+                <div class="row"><span class="dot" style="background:#8C5A34"></span><div style="flex:1;min-width:0"><div style="font-weight:500">结婚纪念日</div><div style="color:#9A8D80">10 月 5 日 &middot; 公历 &middot; 每年</div></div><div style="color:#8C5A34;font-weight:500">12 天</div></div>
+                <div class="row"><span class="dot" style="background:#5F7355"></span><div style="flex:1;min-width:0"><div style="font-weight:500">妈妈生日</div><div style="color:#9A8D80">九月十六 &middot; 农历 &middot; 每年</div></div><div style="color:#6B6055">33 天</div></div>
+                <div class="row"><span class="dot" style="background:#926521"></span><div style="flex:1;min-width:0"><div style="font-weight:500">交房租</div><div style="color:#9A8D80">每月 1 日 &middot; 公历 &middot; 每月</div></div><div style="color:#6B6055">8 天</div></div>
+              </div>
+              <div style="text-align:center;color:#9A8D80;margin-top:10px">查看全部 6 个日子</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>首页</span></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">A-1</span><div class="nm">首页 · 年轮</div><div class="ds">圆环即一年，游标是今天。点的大小与明度表达远近，圆心是下一个日子。</div></figcaption>
+      </figure>
+
+      <figure class="fig">
+        <div class="shot"><div class="ph">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:2px 17px 0">
+              <div class="hd">全部</div>
+              <div class="sub">按月份排列</div>
+            </div>
+            <div style="margin:10px 17px 0;height:34px;background:#F2EDE5;border-radius:11px;display:flex;align-items:center;gap:7px;padding:0 10px">
+              <svg width="12" height="12" viewBox="0 0 13 13" fill="none"><circle cx="5.5" cy="5.5" r="4.1" stroke="#A99C8E" stroke-width="1.4"/><path d="M8.7 8.7 12 12" stroke="#A99C8E" stroke-width="1.4" stroke-linecap="round"/></svg>
+              <span style="color:#A99C8E;flex:1">搜索日子</span>
+            </div>
+            <div style="margin:10px 17px 0;display:flex;gap:6px">
+              <span class="chip on">全部</span><span class="chip">公历</span><span class="chip">农历</span><span class="chip">一次性</span>
+            </div>
+            <div style="margin:0 17px;overflow:hidden">
+              <div class="grp">十月</div>
+              <div class="card">
+                <div class="row"><span class="dot" style="background:#8C5A34"></span><div style="flex:1"><div style="font-weight:500">结婚纪念日</div><div style="color:#9A8D80">10 月 5 日 &middot; 第 3 年</div></div><div style="color:#8C5A34;font-weight:500">12 天</div></div>
+              </div>
+              <div class="grp">十一月</div>
+              <div class="card">
+                <div class="row"><span class="dot" style="background:#926521"></span><div style="flex:1"><div style="font-weight:500">妈妈生日</div><div style="color:#9A8D80">农历九月十六</div></div><div style="color:#6B6055">33 天</div></div>
+                <div class="row"><span class="dot" style="background:#5F7355"></span><div style="flex:1"><div style="font-weight:500">小满生日</div><div style="color:#9A8D80">11 月 22 日</div></div><div style="color:#6B6055">60 天</div></div>
+              </div>
+              <div class="grp">每月重复</div>
+              <div class="card">
+                <div class="row"><span class="dot" style="background:#926521"></span><div style="flex:1"><div style="font-weight:500">交房租</div><div style="color:#9A8D80">每月 1 日</div></div><div style="color:#6B6055">8 天</div></div>
+                <div class="row"><span class="dot" style="background:#5F7355"></span><div style="flex:1"><div style="font-weight:500">每周三 &middot; 家庭日</div><div style="color:#9A8D80">每周三</div></div><div style="color:#6B6055">2 天</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>首页</span></div>
+            <div class="tb on"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">A-2</span><div class="nm">全部 · 按月分组</div><div class="ds">周期性的条目单独归到下方分组，不污染月份视图。</div></figcaption>
+      </figure>
+    </div>
+
+    <div class="traits">
+      <div class="trait"><b>视觉气质</b><span>安静、纸感、有温度</span></div>
+      <div class="trait"><b>与格物的延续</b><span>最高，令牌直接复用</span></div>
+      <div class="trait"><b>深色表现</b><span>好，玄夜档现成</span></div>
+      <div class="trait"><b>实现成本</b><span>最低</span></div>
+    </div>
+  </div>
+
+  <div class="plan-block">
+    <div class="plan-head"><span class="plan-tag">方案 B</span><h3>天象</h3></div>
+    <p class="plan-sub">墨底暖金 · 深色为主 · 情绪最重</p>
+    <p class="small">把圆盘当作一面<b>星盘</b>：十二个月是十二道刻度，日子是盘上会亮的光，越近越亮，今天是一颗沉在轨道上的绿点。圆心显示<b>今天的农历日期与干支</b>。整体以深色为默认（浅色系统下降级为墨色卡片），气质接近观星或旧式历书——最适合「纪念日」这个词本身的分量。</p>
+    <div class="screens">
+      <figure class="fig">
+        <div class="shot"><div class="ph dark">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:2px 17px 0">
+              <div class="hd" style="color:#F2EBDF">天象</div>
+              <div class="sub">丙午年 &middot; 八月十三 &middot; 秋分</div>
+            </div>
+            <div style="display:flex;justify-content:center;margin:10px 0 -4px">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="62" fill="#16140F" stroke="#3A352B" stroke-width=".5"/>
+                <circle cx="90" cy="90" r="46" fill="none" stroke="#3A352B" stroke-width=".5" stroke-dasharray="3 5"/>
+                <circle cx="90" cy="90" r="62" fill="none" stroke="#C9985C" stroke-width="1.5" stroke-dasharray="284 106" stroke-linecap="round" transform="rotate(-90 90 90)" opacity=".5"/>
+                <g stroke="#3A352B" stroke-width="1">
+                  <line x1="121" y1="36.3" x2="117.5" y2="42.4"/><line x1="143.7" y1="59" x2="137.6" y2="62.5"/>
+                  <line x1="143.7" y1="121" x2="137.6" y2="117.5"/><line x1="121" y1="143.7" x2="117.5" y2="137.6"/>
+                  <line x1="59" y1="143.7" x2="62.5" y2="137.6"/><line x1="36.3" y1="121" x2="42.4" y2="117.5"/>
+                  <line x1="36.3" y1="59" x2="42.4" y2="62.5"/><line x1="59" y1="36.3" x2="62.5" y2="42.4"/>
+                </g>
+                <g stroke="#5E5648" stroke-width="1">
+                  <line x1="90" y1="28" x2="90" y2="35"/><line x1="152" y1="90" x2="145" y2="90"/>
+                  <line x1="90" y1="152" x2="90" y2="145"/><line x1="28" y1="90" x2="35" y2="90"/>
+                </g>
+                <circle cx="122.2" cy="57.1" r="2.8" fill="#D9A94E"/>
+                <circle cx="120.7" cy="124.2" r="4" fill="#C9985C"/>
+                <circle cx="120.7" cy="124.2" r="7.5" fill="none" stroke="#C9985C" stroke-width="1" opacity=".35"/>
+                <circle cx="85.7" cy="135.8" r="2.4" fill="#D9A94E"/>
+                <circle cx="85.3" cy="44.2" r="2.8" fill="#D9A94E"/>
+                <circle cx="44.4" cy="96.1" r="2.4" fill="#8FA87C"/>
+                <text x="90" y="88" text-anchor="middle" font-family="Georgia,serif" font-size="15" fill="#F2EBDF">八月十三</text>
+                <text x="90" y="106" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="10" fill="#8A7F6E">秋分 &middot; 距立冬 45 天</text>
+              </svg>
+            </div>
+            <div style="margin:0 17px">
+              <div class="card" style="border-left:2px solid #C9985C">
+                <div style="padding:11px 12px">
+                  <div style="color:#8A7F6E">下一个</div>
+                  <div style="display:flex;align-items:baseline;gap:6px;margin-top:2px">
+                    <span style="font-size:26px;font-weight:500;color:#C9985C;font-variant-numeric:tabular-nums">12</span>
+                    <span style="color:#B5AA99">天后</span>
+                    <span style="margin-left:auto;color:#F2EBDF">结婚纪念日</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card" style="margin-top:9px">
+                <div class="row"><span class="dot" style="background:#C9985C"></span><div style="flex:1"><div style="font-weight:500;color:#F2EBDF">结婚纪念日</div><div style="color:#8A7F6E">农历九月初五 &middot; 每年</div></div><div style="color:#C9985C">12 天</div></div>
+                <div class="row"><span class="dot" style="background:#D9A94E"></span><div style="flex:1"><div style="font-weight:500;color:#F2EBDF">妈妈生日</div><div style="color:#8A7F6E">农历九月十六 &middot; 每年</div></div><div style="color:#B5AA99">33 天</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>天象</span></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">B-1</span><div class="nm">首页 · 天象</div><div class="ds">十二刻度，光点如星。圆心是今天的农历与节气，倒计时下沉为一张卡片。</div></figcaption>
+      </figure>
+
+      <figure class="fig">
+        <div class="shot"><div class="ph dark">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:8px 17px 0;display:flex;align-items:center;justify-content:space-between">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12 4 6 10l6 6" stroke="#B5AA99" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="color:#8A7F6E">编辑</span>
+            </div>
+            <div style="padding:24px 17px 0">
+              <div style="color:#8A7F6E">第 3 个纪念日</div>
+              <div style="font-family:var(--serif);font-size:22px;color:#F2EBDF;margin-top:6px">结婚纪念日</div>
+            </div>
+            <div style="text-align:center;margin:34px 0 0">
+              <div style="display:flex;align-items:baseline;justify-content:center;gap:8px">
+                <span style="font-size:58px;font-weight:500;color:#C9985C;line-height:1;font-variant-numeric:tabular-nums">12</span>
+                <span style="color:#B5AA99;font-size:13px">天后</span>
+              </div>
+              <div style="color:#8A7F6E;margin-top:12px">2026 年 10 月 5 日 &middot; 星期一</div>
+            </div>
+            <div style="margin:32px 17px 0">
+              <div class="card">
+                <div class="fr"><span class="fk">历法</span><span class="fv">公历</span></div>
+                <div class="fr"><span class="fk">重复</span><span class="fv">每年</span></div>
+                <div class="fr"><span class="fk">农历对照</span><span class="fv">九月初五</span></div>
+                <div class="fr"><span class="fk">起算日期</span><span class="fv">2023 年 10 月 5 日</span></div>
+                <div class="fr"><span class="fk">提醒</span><span class="fv">提前 3 天</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>天象</span></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">B-2</span><div class="nm">日子详情</div><div class="ds">超大倒计时占据视觉中心，下方是原始设定。农历条目额外显示公历对照。</div></figcaption>
+      </figure>
+    </div>
+
+    <div class="traits">
+      <div class="trait"><b>视觉气质</b><span>沉静、有分量、仪式感强</span></div>
+      <div class="trait"><b>与格物的延续</b><span>中等，复用玄夜档</span></div>
+      <div class="trait"><b>深色表现</b><span>最好，主场</span></div>
+      <div class="trait"><b>实现成本</b><span>中等（光晕与呼吸动效）</span></div>
+    </div>
+  </div>
+
+  <div class="plan-block">
+    <div class="plan-head"><span class="plan-tag">方案 C</span><h3>刻度</h3></div>
+    <p class="plan-sub">极简几何 · 中性灰 · 信息密度最高</p>
+    <p class="small">去掉纸感与装饰，只留一根极细的圆和几段弧。<b>每条日子是一段弧，弧长表示它占用的时间跨度，粗细表示重要程度</b>；圆心显示<b>年度进度百分比</b>。这是三版里最「工具」的一版，也最能一眼看出一年的密度分布——哪些月份拥挤，哪些月份空着。</p>
+    <div class="screens">
+      <figure class="fig">
+        <div class="shot"><div class="ph">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:2px 17px 0;display:flex;align-items:flex-end;justify-content:space-between">
+              <div>
+                <div class="hd">2026</div>
+                <div class="sub">6 个日子</div>
+              </div>
+              <div class="seg"><span class="on">年</span><span>月</span></div>
+            </div>
+            <div style="display:flex;justify-content:center;margin:14px 0 0">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle cx="90" cy="90" r="62" fill="none" stroke="#E3DCD1" stroke-width=".5"/>
+                <path d="M133.4 45.7A62 62 0 0 1 151.7 83.9" fill="none" stroke="#8C5A34" stroke-width="4" stroke-linecap="round"/>
+                <path d="M131.4 136.1A62 62 0 0 1 92.1 152" fill="none" stroke="#8C5A34" stroke-width="3" stroke-linecap="round" opacity=".75"/>
+                <path d="M28.5 98.2A62 62 0 0 1 32.7 66.4" fill="none" stroke="#8C5A34" stroke-width="2.5" stroke-linecap="round" opacity=".55"/>
+                <path d="M83.6 28.3A62 62 0 0 1 115.3 33.4" fill="none" stroke="#8C5A34" stroke-width="2" stroke-linecap="round" opacity=".4"/>
+                <circle cx="28.5" cy="98.2" r="3" fill="#AA523D"/>
+                <text x="90" y="80" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="10" fill="#9A8D80">已过 266 天</text>
+                <text x="90" y="104" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="26" font-weight="500" fill="#2B241F">73%</text>
+                <text x="90" y="121" text-anchor="middle" font-family="-apple-system,PingFang SC,sans-serif" font-size="10" fill="#9A8D80">还剩 99 天</text>
+              </svg>
+            </div>
+            <div style="margin:8px 17px 0">
+              <div class="card">
+                <div class="row" style="padding:9px 11px"><span class="dot" style="background:#8C5A34"></span><div style="flex:1"><div style="font-weight:500">结婚纪念日</div></div><div style="color:#9A8D80;font-variant-numeric:tabular-nums">10.05</div><div style="color:#8C5A34;font-weight:500;width:38px;text-align:right">12 天</div></div>
+                <div class="row" style="padding:9px 11px"><span class="dot" style="background:#926521"></span><div style="flex:1"><div style="font-weight:500">妈妈生日</div></div><div style="color:#9A8D80;font-variant-numeric:tabular-nums">11.05</div><div style="color:#6B6055;width:38px;text-align:right">33 天</div></div>
+                <div class="row" style="padding:9px 11px"><span class="dot" style="background:#5F7355"></span><div style="flex:1"><div style="font-weight:500">小满生日</div></div><div style="color:#9A8D80;font-variant-numeric:tabular-nums">11.22</div><div style="color:#6B6055;width:38px;text-align:right">60 天</div></div>
+                <div class="row" style="padding:9px 11px"><span class="dot" style="background:#926521"></span><div style="flex:1"><div style="font-weight:500">交房租</div><div style="color:#9A8D80">每月 1 日</div></div><div style="color:#9A8D80;font-variant-numeric:tabular-nums">10.01</div><div style="color:#6B6055;width:38px;text-align:right">8 天</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb on"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>首页</span></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">C-1</span><div class="nm">首页 · 刻度</div><div class="ds">弧长即密度，中心是年度进度。列表用等宽日期对齐，信息密度最高。</div></figcaption>
+      </figure>
+
+      <figure class="fig">
+        <div class="shot"><div class="ph">
+          <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+          <div class="bd">
+            <div style="padding:8px 17px 0;display:flex;align-items:center;justify-content:space-between">
+              <div class="hd" style="font-size:19px">新建</div>
+              <span style="color:#8C5A34;font-weight:500">保存</span>
+            </div>
+            <div style="margin:16px 17px 0">
+              <div class="card" style="padding:12px">
+                <div style="color:#9A8D80">名称</div>
+                <div style="font-weight:500;margin-top:3px">结婚纪念日</div>
+                <div style="height:1px;background:#F1ECE4;margin:11px 0"></div>
+                <div style="color:#9A8D80">历法</div>
+                <div class="seg" style="margin-top:6px"><span class="on" style="flex:1;text-align:center">公历</span><span style="flex:1;text-align:center">农历</span></div>
+                <div style="height:1px;background:#F1ECE4;margin:11px 0"></div>
+                <div style="color:#9A8D80">重复</div>
+                <div style="display:flex;gap:6px;margin-top:6px"><span class="chip on">每年</span><span class="chip">每月</span><span class="chip">每周</span><span class="chip">一次</span></div>
+                <div style="height:1px;background:#F1ECE4;margin:11px 0"></div>
+                <div style="display:flex;justify-content:space-between"><span style="color:#9A8D80">日期</span><span style="font-weight:500">2026 年 10 月 5 日</span></div>
+                <div style="display:flex;justify-content:space-between;margin-top:7px"><span style="color:#9A8D80">农历对照</span><span style="color:#6B6055">九月初五</span></div>
+              </div>
+              <div class="card" style="padding:12px;margin-top:10px">
+                <div style="color:#9A8D80">标记</div>
+                <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+                  <span style="width:20px;height:20px;border-radius:999px;background:#8C5A34"></span>
+                  <span style="width:20px;height:20px;border-radius:999px;background:#926521"></span>
+                  <span style="width:20px;height:20px;border-radius:999px;background:#5F7355"></span>
+                  <span style="width:20px;height:20px;border-radius:999px;background:#AA523D"></span>
+                  <span style="width:20px;height:20px;border-radius:999px;background:#C9BEB0"></span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-top:12px"><span style="color:#9A8D80">提醒</span><span style="font-weight:500">提前 3 天</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg><span>首页</span></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>全部</span></div>
+            <div class="tb on"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb"><svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span>我的</span></div>
+          </div>
+        </div></div>
+        <figcaption><span class="no">C-2</span><div class="nm">新建 · 单页表单</div><div class="ds">历法切换即时联动日期选择器与「农历对照」一行；选农历时「每周」自动置灰。</div></figcaption>
+      </figure>
+    </div>
+
+    <div class="traits">
+      <div class="trait"><b>视觉气质</b><span>克制、冷静、现代</span></div>
+      <div class="trait"><b>与格物的延续</b><span>最低，只共用令牌</span></div>
+      <div class="trait"><b>深色表现</b><span>好，中性灰天然适配</span></div>
+      <div class="trait"><b>实现成本</b><span>中等（弧段计算与布局）</span></div>
+    </div>
+  </div>
+
+  <h3>三版横向对比</h3>
+  <table>
+    <thead><tr><th>维度</th><th>方案 A · 年轮</th><th>方案 B · 天象</th><th>方案 C · 刻度</th></tr></thead>
+    <tbody>
+      <tr><td class="k">圆盘读法</td><td>一圈一年，点是日子</td><td>十二刻度，点是星光</td><td>一条条弧，长度即跨度</td></tr>
+      <tr><td class="k">圆心显示</td><td>下一个日子倒计时</td><td>今天的农历与节气</td><td>年度进度百分比</td></tr>
+      <tr><td class="k">默认模式</td><td>浅色（素笺）</td><td>深色（玄夜）</td><td>浅色（中性）</td></tr>
+      <tr><td class="k">一眼看出</td><td>今天走到哪、下一个是谁</td><td>节令流转的时间感</td><td>哪几个月最拥挤</td></tr>
+      <tr><td class="k">动效重点</td><td>扫弧 + 点依次亮起</td><td>呼吸 + 光晕脉冲</td><td>弧段生长 + 数字滚动</td></tr>
+      <tr><td class="k">与格物一致性</td><td><b>最高</b></td><td>中等</td><td>低</td></tr>
+      <tr><td class="k">实现成本</td><td><b>最低</b></td><td>中</td><td>中</td></tr>
+      <tr><td class="k">主要风险</td><td>气质偏安静，不够「纪念」</td><td>浅色系统下需额外调校</td><td>偏冷，缺少情绪</td></tr>
+    </tbody>
+  </table>
+
+  <div class="verdict">
+    <div class="vh">我的推荐</div>
+    <p><b>方案 A · 年轮。</b>理由是它把「与格物一致」这条要求兑现得最彻底——同一套令牌、同一套视觉语法，两个应用放在一起像一对；实现成本也最低，可以把省下的力气放在真正难的部分：农历换算的边界正确性与拖动旋转的手感。</p>
+    <p>如果你希望这个应用更有分量、更像一件「纪念」的东西，<b>方案 B</b> 更合适，它的情绪浓度是 A 给不了的，代价是多花的调校时间。</p>
+    <p><b>一个折中做法</b>：以 A 的年轮作为骨架，把 C 的「弧长表达跨度」借过来——让每年重复的日子在环上拖出一条极短的弧，表示「这件事会一直持续下去」。这样既不破坏纸感，又补上了 A 信息量偏弱的问题。要不要加，你定。</p>
+  </div>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">03</span>
+    <h2>技术方案</h2>
+    <span class="note">与格物同骨架，只增加两处依赖</span>
+  </div>
+
+  <h3>沿用格物的部分</h3>
+  <table>
+    <thead><tr><th>层面</th><th>选型</th><th>来源</th></tr></thead>
+    <tbody>
+      <tr><td class="k">框架</td><td>Expo SDK 57 + expo-router（typedRoutes + reactCompiler）</td><td>格物 package.json / app.json</td></tr>
+      <tr><td class="k">运行时</td><td>React Native 0.86.3 / React 19.2.3 / TypeScript 6</td><td>同上</td></tr>
+      <tr><td class="k">动画</td><td>react-native-reanimated 4.5.1 + worklets + gesture-handler</td><td>同上</td></tr>
+      <tr><td class="k">存储</td><td>expo-sqlite，WAL + 版本化 migrate + 软删除 + 回收站</td><td>格物 <code>lib/db/</code></td></tr>
+      <tr><td class="k">主题</td><td>五套令牌（素笺 / 靛青 / 青瓷 / 朱砂 + 玄夜跟随系统），<code>makeStyles</code> 样式工厂</td><td>格物 <code>constants/theme.ts</code>、<code>lib/theme/</code></td></tr>
+      <tr><td class="k">导航栏</td><td>完全自定义 TabBar + 中央突起按钮</td><td>格物 <code>components/TabBar.tsx</code></td></tr>
+      <tr><td class="k">日期处理</td><td>手写格式化，不用 Intl / toLocaleDateString（Hermes 上不稳定）</td><td>格物 <code>lib/date.ts</code> 的经验</td></tr>
+      <tr><td class="k">发布</td><td>本地构建 arm64 release APK + 签名密钥流程</td><td>格物已有的构建脚本与密钥</td></tr>
+    </tbody>
+  </table>
+
+  <h3>需要新增的依赖</h3>
+  <table>
+    <thead><tr><th>依赖</th><th>用途</th><th>是否必须</th></tr></thead>
+    <tbody>
+      <tr><td class="k">lunar-javascript</td><td>农历 ⇄ 公历换算、闰月判定、干支与节气</td><td><b>必须</b>，三版都要</td></tr>
+      <tr><td class="k">react-native-svg</td><td>画圆环进度与弧段。Expo 官方支持，SDK 57 有对应版本</td><td><b>必须</b>——RN 没有原生 dasharray，纯 View 拼圆环的做法在拖动旋转与弧段场景下会失控</td></tr>
+      <tr><td class="k">expo-haptics</td><td>拖动圆盘时的轻震动反馈</td><td>建议（体验加分，成本极低）</td></tr>
+      <tr><td class="k">expo-notifications</td><td>到日提醒</td><td><b>待你确认</b>——涉及权限申请与后台行为，会明显增加复杂度</td></tr>
+    </tbody>
+  </table>
+
+  <h3>建议的工程结构</h3>
+  <p class="small">与格物同构，只把业务目录换成纪念日的：<code>lib/db/</code>（events / pref）、<code>lib/lunar/</code>（农历换算与规则解析，<b>纯函数、可单测</b>）、<code>lib/date/</code>（公历计算与格式化）、<code>components/domain/YearDial.tsx</code>（首页圆盘）、<code>lib/theme/</code>（主题运行时）。</p>
+  <div class="callout">
+    <b>把农历与周期规则做成纯函数，是这个项目里最重要的一条工程决定。</b>规则解析不碰数据库、不碰 React、不读系统时间（今天作为参数传入）。这样八种组合的边界情况可以写成一张表逐条断言——2 月 29 日、腊月三十、闰四月、跨年农历日期，全部在测试里锁死。这类逻辑靠手点验证一定会有漏网的。
+  </div>
+
+  <h3>里程碑建议</h3>
+  <table>
+    <thead><tr><th>阶段</th><th>内容</th><th>验收标准</th></tr></thead>
+    <tbody>
+      <tr><td class="k">M1 · 骨架</td><td>工程初始化、主题令牌与运行时、SQLite schema 与迁移、TabBar</td><td>四套浅色可切换、深色跟随系统、空库能起</td></tr>
+      <tr><td class="k">M2 · 规则</td><td>农历库接入 + 八种组合的「下一次」解析 + 单元测试</td><td>边界用例全绿，这是最该慢的一步</td></tr>
+      <tr><td class="k">M3 · 增删改</td><td>新建 / 编辑 / 详情 / 回收站</td><td>能完整录入一条农历每年重复的日子并正确回显</td></tr>
+      <tr><td class="k">M4 · 年盘</td><td>选定方案的圆盘：布局、扫弧、点、游标、拖动旋转</td><td>60fps，动画全走 UI 线程</td></tr>
+      <tr><td class="k">M5 · 收尾</td><td>列表视图、搜索筛选、备份导出、图标与启动图、APK</td><td>可安装的 arm64 release 包</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head">
+    <span class="sec-num">04</span>
+    <h2>待你确认</h2>
+    <span class="note">这几项定了就可以开工</span>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>事项</th><th>我的建议</th></tr></thead>
+    <tbody>
+      <tr><td class="k">1</td><td><b>选哪版方案</b></td><td>A 年轮；是否借入 C 的「弧长表达跨度」由你定</td></tr>
+      <tr><td class="k">2</td><td><b>App 名称</b></td><td>候选：<b>念日</b>／<b>岁时</b>／<b>长日</b>／<b>有期</b>——与「格物」同为两个字的文言气质</td></tr>
+      <tr><td class="k">3</td><td><b>平台范围</b></td><td>只出 Android arm64 APK（与格物一致）</td></tr>
+      <tr><td class="k">4</td><td><b>是否要本地通知</b></td><td>建议先不做，M5 之后按需要再加</td></tr>
+      <tr><td class="k">5</td><td><b>圆盘是否要拖动旋转</b></td><td>建议要，这是它作为「主角」的核心手感；成本约半天</td></tr>
+      <tr><td class="k">6</td><td><b>主题套数</b></td><td>沿用格物五套，令牌直接搬，不重新配色</td></tr>
+      <tr><td class="k">7</td><td class="k">数据备份</td><td>沿用格物的导出方式，M5 阶段做</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  纪念日 App · 需求梳理与设计方案 v0.1 · 2026-09-23 · 技术栈对齐「格物」（Expo SDK 57）
+</footer>
+
+</div>
+</body>
+</html>

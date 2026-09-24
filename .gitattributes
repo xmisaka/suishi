@@ -1,0 +1,25 @@
+# 默认按文本处理，提交时统一转成 LF 存入仓库
+* text=auto
+
+# Shell / Gradle 脚本必须保持 LF，否则在类 Unix 环境下无法执行
+*.sh   text eol=lf
+gradlew text eol=lf
+
+# Windows 批处理必须保持 CRLF
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+*.ps1  text eol=crlf
+
+# 二进制文件不做任何换行符转换
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.ttf   binary
+*.otf   binary
+*.jar   binary
+*.keystore binary
+*.apk   binary
+*.aab   binary

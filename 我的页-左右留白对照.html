@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>岁时 · 「我的」页模块左右留白 · 修复对照</title>
+<style>
+  :root{
+    /* 页面底色沿用浅色（本页是评审页，不是 App 界面） */
+    --page:#F4F1EC; --panel:#FFFDFA; --ink:#2A2620; --ink2:#6B6055;
+    --rule:#E2DBD0; --bad:#AA523D; --good:#5F7355;
+
+    /* 以下色值全部抄自 src/constants/theme.ts → THEMES.xuanye.tokens */
+    --paper:#16140F;      --canvas:#1C1A15;   --surface:#242118;
+    --surface2:#2A2620;   --inset:#302C23;
+    --k-ink:#F2EBDF;      --k-ink2:#B5AA99;   --k-ink3:#8A7F6E;  --k-ink4:#5E5648;
+    --k-line:#3A352B;     --k-line2:#332F26;  --k-line3:#2C2821;
+    --k-brand:#C9985C;    --k-brandDeep:#E0B47C; --k-brandBg:#3A2F20;
+    --k-onAccent:#1C1A15;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);
+       font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:900px;margin:0 auto;padding:56px 32px 80px}
+  h1{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-weight:400;
+     font-size:31px;letter-spacing:.02em;margin:0 0 10px}
+  .sub{color:var(--ink2);font-size:14px;line-height:1.85;margin:0 0 6px}
+  .meta{color:#9A8D80;font-size:12px;font-family:ui-monospace,Consolas,monospace;
+        margin:20px 0 44px;padding-bottom:20px;border-bottom:1px solid var(--rule)}
+
+  .stage{display:flex;gap:52px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+
+  .phone{width:336px;border-radius:26px;background:var(--canvas);
+         border:1px solid var(--k-line2);overflow:hidden;
+         box-shadow:0 18px 40px -20px rgba(28,26,21,.55);position:relative}
+  .gl,.gr{position:absolute;top:0;bottom:0;width:1px;z-index:5;pointer-events:none;
+          background:repeating-linear-gradient(to bottom,rgba(201,152,92,.75) 0 4px,transparent 4px 9px)}
+  .gl{left:17px}
+  .gr{right:17px}
+
+  .sb{display:flex;justify-content:space-between;align-items:center;
+      padding:9px 17px 4px;color:var(--k-ink3);font-size:11px;
+      font-variant-numeric:tabular-nums}
+  .sb .rt{display:flex;gap:5px;align-items:center}
+  .bat{width:17px;height:8px;border:1px solid var(--k-ink4);border-radius:2px;display:inline-block}
+  .sig{display:flex;gap:2px;align-items:flex-end}
+  .sig i{display:block;width:2px;background:var(--k-ink4);border-radius:1px}
+  .sig i:nth-child(1){height:4px}.sig i:nth-child(2){height:6px}.sig i:nth-child(3){height:8px}
+
+  .hd{padding:8px 17px 12px}
+  .hd .t{font-family:Georgia,"Songti SC","Noto Serif SC",serif;font-size:23px;
+         color:var(--k-ink);letter-spacing:.03em}
+  .hd .s{font-size:11.5px;color:var(--k-ink3);margin-top:3px}
+
+  .body{padding-bottom:6px}
+
+  /* 卡片通用 */
+  .card{background:var(--surface);border:.5px solid var(--k-line2);
+        border-radius:14px;overflow:hidden}
+  /* ★ 本页唯一变量：分组卡左右是否让出 17px */
+  .card-grp{margin-left:var(--pad);margin-right:var(--pad)}
+  .before{--pad:0px}
+  .after{--pad:17px}
+
+  .metrics{margin:4px 17px 0}
+  .strip{display:flex}
+  .cell{flex:1;padding:12px 8px;text-align:center;
+        display:flex;flex-direction:column;align-items:center;gap:2px}
+  .cell+.cell{border-left:.5px solid var(--k-line2)}
+  .cv{font-size:17px;font-weight:600;color:var(--k-ink);font-variant-numeric:tabular-nums}
+  .cv.brand{color:var(--k-brand)}
+  .cl{font-size:11.5px;color:var(--k-ink3)}
+
+  .section{margin-top:24px}
+  .sec-label{font-size:11px;color:var(--k-ink3);letter-spacing:.4px;
+             padding:0 17px 8px}
+
+  .row{display:flex;justify-content:space-between;align-items:center;gap:8px;
+       min-height:46px;padding:8px 16px;border-bottom:.5px solid var(--k-line3)}
+  .row:last-child{border-bottom:0}
+  .rl{font-size:14px;color:var(--k-ink)}
+  .rv{font-size:14px;font-weight:500;color:var(--k-ink);text-align:right}
+  .rv.brand{color:var(--k-brand)}
+  .rv.dim{color:var(--k-ink4);font-weight:400}
+
+  .foot{text-align:center;font-size:11.5px;line-height:18px;color:var(--k-ink4);
+        margin:24px 40px 0}
+
+  .tabbar{display:flex;align-items:center;justify-content:space-around;
+          background:var(--surface);border-top:.5px solid var(--k-line2);
+          padding:9px 0 12px;margin-top:14px}
+  .tb{display:flex;flex-direction:column;align-items:center;gap:3px;
+      font-size:10px;color:var(--k-ink3);width:56px}
+  .tb.on{color:var(--k-brand)}
+  .tb svg{display:block}
+  .fab{width:40px;height:40px;border-radius:20px;background:var(--k-brand);
+       display:flex;align-items:center;justify-content:center;margin-top:-14px}
+
+  figcaption{margin-top:16px;text-align:center;font-size:12.5px;line-height:1.9}
+  .no{display:inline-block;font-family:ui-monospace,Consolas,monospace;font-size:11px;
+      padding:1px 7px;border-radius:999px;background:#EDE7DC;color:#6B6055;margin-right:7px}
+  .cap-bad{color:var(--bad);font-weight:600}
+  .cap-good{color:var(--good);font-weight:600}
+
+  h2{font-family:Georgia,"Songti SC",serif;font-weight:400;font-size:19px;
+     margin:56px 0 14px;letter-spacing:.02em}
+  table{width:100%;border-collapse:collapse;background:var(--panel);
+        border:1px solid var(--rule);border-radius:10px;overflow:hidden;font-size:13px}
+  th,td{padding:10px 13px;text-align:left;border-bottom:1px solid var(--rule);
+        vertical-align:top;line-height:1.6}
+  th{background:#FBF8F3;font-weight:600;color:#4A4237;font-size:12px;letter-spacing:.04em}
+  tr:last-child td{border-bottom:0}
+  td.k{color:#6B6055;width:150px}
+  .bad{color:var(--bad);font-weight:600}
+  .good{color:var(--good);font-weight:600}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+  .notes{margin-top:22px;font-size:13px;line-height:1.95;color:#4A4237}
+  .notes b{color:var(--ink)}
+  .notes li{margin-bottom:9px}
+  .notes ul{padding-left:20px;margin:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>「我的」页 · 模块左右留白</h1>
+  <p class="sub">两屏内容完全相同，唯一变量是分组卡片的左右边距。屏内虚线即 17px 目标边界。</p>
+  <p class="meta">色值取自 src/constants/theme.ts → THEMES.xuanye　·　GUTTER = 17　·　对照基准：纪念日App-需求与设计方案.html「margin:16px 17px 0」</p>
+
+  <div class="stage">
+    <!-- ========== 修复前 ========== -->
+    <figure style="margin:0">
+      <div class="phone before">
+        <div class="gl"></div><div class="gr"></div>
+
+        <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+
+        <div class="hd">
+          <div class="t">我的</div>
+          <div class="s">外观、数据与关于</div>
+        </div>
+
+        <div class="body">
+          <div class="card metrics">
+            <div class="strip">
+              <div class="cell"><div class="cv">3</div><div class="cl">日子</div></div>
+              <div class="cell"><div class="cv">1</div><div class="cl">农历</div></div>
+              <div class="cell"><div class="cv">3</div><div class="cl">盘上</div></div>
+              <div class="cell"><div class="cv brand">1</div><div class="cl">置顶</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">外观</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">主题</span><span class="rv">玄夜 · 墨底暖金</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">数据</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">回收站</span><span class="rv dim">空</span></div>
+              <div class="row"><span class="rl">导出为文本</span><span class="rv dim">即将支持</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">关于</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">岁时</span><span class="rv dim">v0.1.0</span></div>
+            </div>
+          </div>
+
+          <div class="foot">数据全部存在这台设备上，不上传、不需要账号。</div>
+
+          <div class="tabbar">
+            <div class="tb">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg>
+              <span>首页</span>
+            </div>
+            <div class="tb">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>全部</span>
+            </div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="#1C1A15" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb on">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>我的</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="no">修复前</span><span class="cap-bad">三张分组卡左右 0 —— 贴边</span><br>
+        分组标题缩进 17px，卡片却压在虚线上
+      </figcaption>
+    </figure>
+
+    <!-- ========== 修复后 ========== -->
+    <figure style="margin:0">
+      <div class="phone after">
+        <div class="gl"></div><div class="gr"></div>
+
+        <div class="sb"><span>9:41</span><span class="rt"><span class="sig"><i></i><i></i><i></i></span><span class="bat"></span></span></div>
+
+        <div class="hd">
+          <div class="t">我的</div>
+          <div class="s">外观、数据与关于</div>
+        </div>
+
+        <div class="body">
+          <div class="card metrics">
+            <div class="strip">
+              <div class="cell"><div class="cv">3</div><div class="cl">日子</div></div>
+              <div class="cell"><div class="cv">1</div><div class="cl">农历</div></div>
+              <div class="cell"><div class="cv">3</div><div class="cl">盘上</div></div>
+              <div class="cell"><div class="cv brand">1</div><div class="cl">置顶</div></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">外观</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">主题</span><span class="rv">玄夜 · 墨底暖金</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">数据</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">回收站</span><span class="rv dim">空</span></div>
+              <div class="row"><span class="rl">导出为文本</span><span class="rv dim">即将支持</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-label">关于</div>
+            <div class="card card-grp">
+              <div class="row"><span class="rl">岁时</span><span class="rv dim">v0.1.0</span></div>
+            </div>
+          </div>
+
+          <div class="foot">数据全部存在这台设备上，不上传、不需要账号。</div>
+
+          <div class="tabbar">
+            <div class="tb">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.2" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2.4" fill="currentColor"/></svg>
+              <span>首页</span>
+            </div>
+            <div class="tb">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>全部</span>
+            </div>
+            <div class="tb"><div class="fab"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 4v12M4 10h12" stroke="#1C1A15" stroke-width="1.8" stroke-linecap="round"/></svg></div></div>
+            <div class="tb on">
+              <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3.2" stroke="currentColor" stroke-width="1.5"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              <span>我的</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption>
+        <span class="no">修复后</span><span class="cap-good">左右各 17px —— 卡片压在虚线上</span><br>
+        卡片边缘与分组标题、上方概览条统一在 17px
+      </figcaption>
+    </figure>
+  </div>
+
+  <h2>规格对齐表</h2>
+  <table>
+    <thead>
+      <tr><th class="k">元素</th><th>方案页</th><th>实现 · 修复前</th><th>实现 · 修复后</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="k">概览条（4 格）</td>
+        <td class="mono">margin: 16px 17px 0</td>
+        <td class="good">17 / 17 ✓</td>
+        <td class="good">17 / 17 ✓</td>
+      </tr>
+      <tr>
+        <td class="k">分组标题</td>
+        <td class="mono">.grp margin: 14px 17px 6px</td>
+        <td class="good">17 / 17 ✓</td>
+        <td class="good">17 / 17 ✓</td>
+      </tr>
+      <tr>
+        <td class="k">外观 · 卡片</td>
+        <td class="mono">margin: … 17px …</td>
+        <td class="bad">0 / 0 ✗ 贴边</td>
+        <td class="good">17 / 17 ✓</td>
+      </tr>
+      <tr>
+        <td class="k">数据 · 卡片</td>
+        <td class="mono">margin: … 17px …</td>
+        <td class="bad">0 / 0 ✗ 贴边</td>
+        <td class="good">17 / 17 ✓</td>
+      </tr>
+      <tr>
+        <td class="k">关于 · 卡片</td>
+        <td class="mono">margin: … 17px …</td>
+        <td class="bad">0 / 0 ✗ 贴边</td>
+        <td class="good">17 / 17 ✓</td>
+      </tr>
+      <tr>
+        <td class="k">行内左右内边距</td>
+        <td class="mono">.fr padding: 10px 12px</td>
+        <td class="mono">16（全 App 共用）</td>
+        <td class="mono">16 —— 有意不动，见下</td>
+      </tr>
+      <tr>
+        <td class="k">文本实际缩进</td>
+        <td class="mono">17 + 12 = 29</td>
+        <td class="bad">0 + 16 = 16</td>
+        <td class="good">17 + 16 = 33</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="notes">
+    <b>实测数字（无头 Chrome 探针读出，非目测）</b>
+    <ul>
+      <li>分组卡外沿距手机屏外沿：修复前 <span class="mono bad">1px</span>（仅 1px 边框，即视觉贴边）→
+          修复后 <span class="mono good">18px</span>（= 1px 边框 + GUTTER 17）。</li>
+      <li>同一侧的参考虚线、概览条、分组标题也都是 <span class="mono">18px</span> ——
+          四者在修复后共线，修复前卡片比其余三者外扩 17px。</li>
+      <li>卡片宽：修复前 <span class="mono">334px</span>（通栏）→ 修复后 <span class="mono">300px</span>（= 334 − 17×2），
+          手机屏 CSS 宽 336px。</li>
+      <li>文档 <span class="mono">scrollWidth == clientWidth == 1100</span>，无横向溢出。</li>
+    </ul>
+
+    <b>有意不动的项</b>
+    <ul>
+      <li>行内左右内边距实测 <span class="mono">Space.lg = 16</span>，方案页是 <span class="mono">12</span>。
+          这是 <span class="mono">SettingRow</span> 的全局值，全 App 九个页面共用，单页对齐时不纳入范围 ——
+          若要对齐需要一次全局调整并重验所有列表页。</li>
+      <li>本页顶部的概览条原本就写对了（<span class="mono">marginHorizontal: 17</span>），未改动。</li>
+    </ul>
+
+    <b>同类问题 · 本次已一并修掉</b>
+    <ul>
+      <li>事件详情页「备注」卡：同页的「日期」「标记」卡都缩进了 17px，只有它裸露贴边 ——
+          同一个漏法，已补 <span class="mono">styles.infoCard</span>。</li>
+    </ul>
+
+    <b>同类问题 · 本次未覆盖（需你定）</b>
+    <ul>
+      <li>新建 / 编辑页外面套了一层 <span class="mono">&lt;Gutter&gt;</span>，而 <span class="mono">SectionCard</span>
+          的标题各自又带 17px —— 于是该页 <b>标题缩进 34、卡片缩进 17</b>，标题比卡片多出 17px，
+          与方案页「标题与卡片同一条边」不符。修它要拆掉那层统一容器、给 6 处元素各自补边距，
+          属于结构调整而非补一个属性，所以留给你确认后再动。</li>
+    </ul>
+
+    <b>根因（为什么这类缺陷能长期存活）</b>
+    <ul>
+      <li><span class="mono">SectionCard</span> 只给标题加左右边距，<b>内容区是裸露的</b> ——
+          内容要不要内缩完全取决于调用方。漏了不报错、类型检查也不报，只在视觉上差一截。</li>
+      <li>首页 / 列表 / 详情页都自己补了 <span class="mono">marginHorizontal: GUTTER</span>，
+          「我的」页漏了这三次 —— 这就是参差的来源。</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

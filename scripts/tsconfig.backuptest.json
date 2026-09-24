@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    // 与 tsconfig.caltest.json 同样的理由：产物要被 node 直接 require，
+    // 不走 Metro/bundler 的解析规则，所以必须用 classic node 解析。
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "rootDir": "../src/lib",
+    "outDir": "../.workbuddy/tmp/backuptest"
+  },
+  "include": [
+    "../src/lib/backup.ts",
+    "../src/lib/coerce.ts",
+    "../src/lib/date.ts",
+    "../src/lib/types.ts"
+  ]
+}

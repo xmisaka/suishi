@@ -1,0 +1,18 @@
+# 岁时 · APK 特征串（正向：必须命中）
+#
+# 这些串只可能来自本项目自己的源码，任一命中即证明新代码进了包。
+# 注意：非 ASCII 串在 Hermes 里以 UTF-16LE 存储，verify_apk.py 已按此处理。
+
+# 应用标识
+岁时
+# 首页状态文案（src/app/(tabs)/index.tsx）
+星盘还是空的
+记一笔
+将到
+还早
+# 四套主题名（src/constants/theme.ts）
+玄夜
+苍青
+墨玉
+素笺
+# 首页 tab 文案（src/components/TabBar.tsx）

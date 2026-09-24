@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    // TS 6 把 node10 标成弃用（TS 7 将移除）。这里必须用 classic node 解析，
+    // 因为产物要被 node 直接 require，不走 Metro/bundler 的解析规则。
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0",
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "rootDir": "../src/lib",
+    "outDir": "../.workbuddy/tmp/caltest"
+  },
+  "include": [
+    "../src/lib/calendar/**/*.ts",
+    "../src/lib/date.ts",
+    "../src/lib/dial.ts",
+    "../src/lib/types.ts",
+    "../src/types/**/*.d.ts"
+  ]
+}

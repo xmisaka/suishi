@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>岁时 · 星盘强化三版方案</title>
+<style>
+  :root{
+    --paper:#F7F4EF; --paper2:#FBF9F6; --card:#FFFFFF;
+    --ink:#2B241F; --ink2:#6B6055; --ink3:#9A8D80; --ink4:#C9BEB0;
+    --line:#E3DCD1; --line2:#EBE5DB;
+    --brand:#8C5A34; --brand-d:#6B4224; --brand-bg:#F3E9DE;
+    --sage:#5F7355; --amber:#926521; --clay:#AA523D;
+    --night:#16140F;
+    --serif:Georgia,"Songti SC","Source Han Serif SC",SimSun,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--serif); font-size:16px; line-height:2.0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:880px; margin:0 auto; padding:72px 32px 120px}
+  header{border-bottom:1px solid var(--line); padding-bottom:36px; margin-bottom:56px}
+  .eyebrow{font-family:var(--sans); font-size:11px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--ink3); margin:0 0 18px}
+  h1{font-size:34px; line-height:1.5; font-weight:400; margin:0 0 20px; letter-spacing:.02em}
+  h1 b{font-weight:400; color:var(--brand)}
+  .lede{font-size:16.5px; color:var(--ink2); margin:0; max-width:66ch}
+  h2{font-size:24px; font-weight:400; margin:76px 0 8px; letter-spacing:.02em;
+    padding-top:28px; border-top:1px solid var(--line2)}
+  h2 .no{font-family:var(--sans); font-size:12px; color:var(--brand);
+    letter-spacing:.16em; display:block; margin-bottom:10px; font-weight:500}
+  h3{font-size:19px; font-weight:400; margin:44px 0 12px}
+  h4{font-family:var(--sans); font-size:13px; font-weight:600; margin:34px 0 10px;
+    color:var(--brand-d); letter-spacing:.04em}
+  p{margin:0 0 20px}
+  .muted{color:var(--ink2)}
+  .sans{font-family:var(--sans); font-size:14.5px; line-height:1.95}
+  em{font-style:normal; color:var(--brand-d); border-bottom:1px solid var(--brand-bg)}
+  strong{font-weight:600}
+  .dial-note{font-family:var(--sans); font-size:12.5px; color:var(--ink3);
+    text-align:center; margin:14px 0 0; line-height:1.7}
+
+  figure.dial{margin:32px 0 12px; text-align:center}
+  .screen{display:inline-block; width:100%; max-width:400px; border-radius:20px;
+    background:var(--night); padding:22px 22px 26px;
+    box-shadow:0 1px 2px rgba(43,36,31,.06), 0 12px 32px -12px rgba(43,36,31,.28)}
+  .screen svg{display:block; width:100%; height:auto}
+
+  table{width:100%; border-collapse:collapse; margin:22px 0 26px;
+    font-family:var(--sans); font-size:13.5px; line-height:1.75}
+  th{text-align:left; font-weight:600; color:var(--ink2); font-size:12.5px;
+    border-bottom:1px solid var(--line); padding:10px 12px 10px 0}
+  td{border-bottom:1px solid var(--line2); padding:11px 12px 11px 0; vertical-align:top}
+  td.n{font-variant-numeric:tabular-nums; white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  .tag{display:inline-block; font-family:var(--sans); font-size:11px; line-height:1.6;
+    padding:1px 8px; border-radius:99px; background:var(--brand-bg); color:var(--brand-d)}
+  .tag.s{background:#EDF1E9; color:var(--sage)}
+  .tag.a{background:#FBF1DF; color:var(--amber)}
+  .tag.c{background:#F9EAE5; color:var(--clay)}
+  .tag.n{background:#F2EDE5; color:var(--ink2)}
+
+  .cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+    gap:14px; margin:24px 0 8px}
+  .box{background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px}
+  .box h5{font-family:var(--sans); font-size:13px; font-weight:600; margin:0 0 8px;
+    color:var(--brand-d)}
+  .box p{font-family:var(--sans); font-size:13.5px; line-height:1.85; margin:0; color:var(--ink2)}
+
+  ul,ol{margin:0 0 20px; padding-left:22px}
+  li{margin-bottom:9px}
+  li::marker{color:var(--ink4)}
+
+  .verdict{background:var(--card); border:1px solid var(--line);
+    border-left:3px solid var(--brand); border-radius:0 12px 12px 0;
+    padding:24px 28px; margin:30px 0}
+  .verdict p:last-child{margin-bottom:0}
+  .verdict .vh{font-family:var(--sans); font-size:12px; letter-spacing:.14em;
+    color:var(--brand); text-transform:uppercase; margin:0 0 12px; font-weight:600}
+
+  .pick{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px;
+    margin:26px 0}
+  .pick .p{background:var(--card); border:1px solid var(--line); border-radius:14px;
+    padding:22px 24px}
+  .pick .p.hot{border:2px solid var(--brand)}
+  .pick h5{font-family:var(--sans); font-size:14px; font-weight:600; margin:0 0 4px}
+  .pick .sub{font-family:var(--sans); font-size:12px; color:var(--ink3); margin:0 0 14px}
+  .pick ul{font-family:var(--sans); font-size:13.5px; line-height:1.9; padding-left:18px;
+    margin:0}
+  footer{border-top:1px solid var(--line); margin-top:80px; padding-top:28px;
+    font-family:var(--sans); font-size:12.5px; color:var(--ink3); line-height:1.9}
+  code{font-family:var(--sans); font-size:13px; background:var(--brand-bg);
+    color:var(--brand-d); padding:1px 6px; border-radius:5px}
+  @media (max-width:640px){
+    .wrap{padding:44px 20px 80px}
+    h1{font-size:26px} h2{font-size:20px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">岁时 · 首页星盘</p>
+  <h1>把盘做得更厚<br><b>三版强化方案</b></h1>
+  <p class="lede">现在的星盘是一道细环、十二道刻度、若干光点。结构没错，但盘内是空的，而且整张盘上只有「我的日子」，没有「天地的时间」——而后者才是「天象」这个母题的立足点。下面三版各自往一个方向加厚，可以单选，也可以拆开重组。</p>
+</header>
+
+<h2><span class="no">现状盘点</span>这张盘现在有八类元素</h2>
+
+<table>
+  <tr><th style="width:26%">元素</th><th style="width:34%">现状</th><th>作用</th></tr>
+  <tr><td>外轨道</td><td>一道 1.5px 细圆</td><td>界定「一年」的边界</td></tr>
+  <tr><td>月份刻度</td><td>12 道 1px 短线，等分在环上</td><td>读得出月份</td></tr>
+  <tr><td>今天刻度</td><td>一道金色长刻 + 端点小圆，随盘转走</td><td>盘的零位，也告诉你转了多少</td></tr>
+  <tr><td>金弧</td><td>从今天扫到焦点，800ms 显影</td><td>「还有多远」</td></tr>
+  <tr><td>光点</td><td>按分类上色、按远近调亮度，置顶的更大</td><td>全部日子</td></tr>
+  <tr><td>焦点光晕</td><td>双环 10 / 16</td><td>谁在指针底下</td></tr>
+  <tr><td>指针</td><td>12 点三角</td><td>焦点指针</td></tr>
+  <tr><td>圆心</td><td>名字 + 倒计时 + 公历 + 农历 + 周年</td><td>焦点详情</td></tr>
+</table>
+
+<h4>四处缺口</h4>
+<ol>
+  <li><strong>盘内是空的。</strong>直径 292px 的圆里没有任何内容，一年只有 12 道刻度，中段一大片留白。</li>
+  <li><strong>只有「我的日子」。</strong>没有节气、月相、四季——盘是纯粹的数据可视化，不是一个「天象」。</li>
+  <li><strong>光点会挤成一团。</strong>同一天或相邻几天的条目，在 340px 的盘上只差 1–2px，直接糊在一起。示例里「今天」和「3 天后」两枚中心只差 <code>3.5px</code>。</li>
+  <li><strong>其余光点没有身份。</strong>三十枚小圆里，除了焦点那一枚，其余都只是「有个日子」，看不出是谁、哪一类还叠了几条。</li>
+</ol>
+
+<div class="verdict">
+  <p class="vh">一个前提</p>
+  <p>方案里所有「历书层」元素都不是画饼——我已经拿项目里现成的 <code>lunar-javascript@1.7.7</code> 实测过：<strong>二十四节气可以精确到日并算出环上角度</strong>（秋分 +0d、寒露 +15d、霜降 +30d、立冬 +45d…），<strong>月相有 23 档古称</strong>（朔、上弦、望、下弦、既望…），另有干支纪年月日、二十八宿、五行可取。数据侧零成本，加的都是渲染与排版。</p>
+  <p>另外有个意外的顺带发现：<strong>八节——四立加二分二至——正好每 45° 一个</strong>（秋分 0°、立冬 45°、冬至 90°、立春 135°、春分 180°、立夏 225°、夏至 270°、立秋 315°）。这不是巧合，是节气的天文定义决定的。它意味着方案甲的主骨架天然规整，不需要人为凑角度。</p>
+</div>
+
+<h2><span class="no">方案甲</span>时宪</h2>
+<p class="muted sans">向<strong>历法深度</strong>要丰富。把星盘变成一页真正的时宪书——盘上不只是我的日子，还有天地的时间。</p>
+
+<figure class="dial">
+  <div class="screen"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<circle cx="170" cy="170" r="146" fill="#1C1A15"/>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 271.90 65.44 L 249.57 88.36 A 114.00 114.00 0 0 0 170.00 56.00 Z" fill="#C9985C" opacity="0.075"/>
+<path d="M 315.95 166.24 A 146.00 146.00 0 0 1 278.83 267.32 L 254.98 245.99 A 114.00 114.00 0 0 0 283.96 167.06 Z" fill="#C9985C" opacity="0.075"/>
+<path d="M 180.02 315.66 A 146.00 146.00 0 0 1 73.62 279.67 L 94.74 255.63 A 114.00 114.00 0 0 0 177.82 283.73 Z" fill="#C9985C" opacity="0.075"/>
+<path d="M 24.26 178.77 A 146.00 146.00 0 0 1 64.57 69.00 L 87.68 91.14 A 114.00 114.00 0 0 0 56.21 176.85 Z" fill="#C9985C" opacity="0.075"/>
+<circle cx="170" cy="170" r="146" fill="none" stroke="#3A352B" stroke-width="0.8"/>
+<circle cx="170" cy="170" r="104" fill="none" stroke="#2C2821" stroke-width="0.8" stroke-dasharray="2 5"/>
+<g stroke="#3A352B" stroke-width="0.9" opacity="0.4"><line x1="205.1" y1="36.6" x2="196.5" y2="69.4"/><line x1="238.0" y1="49.9" x2="221.2" y2="79.5"/><line x1="288.3" y1="99.0" x2="259.2" y2="116.5"/><line x1="302.5" y1="131.4" x2="269.9" y2="140.9"/><line x1="304.8" y1="199.4" x2="271.6" y2="192.1"/><line x1="292.9" y1="232.8" x2="262.6" y2="217.3"/><line x1="246.1" y1="285.2" x2="227.3" y2="256.8"/><line x1="214.2" y1="300.7" x2="203.3" y2="268.5"/><line x1="144.1" y1="305.5" x2="150.5" y2="272.2"/><line x1="110.4" y1="294.5" x2="125.1" y2="263.8"/><line x1="55.5" y1="247.0" x2="83.7" y2="228.1"/><line x1="38.9" y1="213.1" x2="71.2" y2="202.5"/><line x1="35.2" y1="140.6" x2="68.4" y2="147.9"/><line x1="48.2" y1="105.1" x2="78.2" y2="121.1"/><line x1="97.9" y1="52.3" x2="115.7" y2="81.3"/><line x1="132.6" y1="37.2" x2="141.8" y2="69.9"/></g>
+<g stroke="#3A352B" stroke-width="1.1" opacity="0.95"><line x1="207.2" y1="28.8" x2="205.1" y2="36.6"/><line x1="241.9" y1="42.9" x2="238.0" y2="49.9"/><line x1="295.2" y1="94.8" x2="288.3" y2="99.0"/><line x1="310.2" y1="129.2" x2="302.5" y2="131.4"/><line x1="312.7" y1="201.1" x2="304.8" y2="199.4"/><line x1="300.0" y1="236.4" x2="292.9" y2="232.8"/><line x1="250.5" y1="291.8" x2="246.1" y2="285.2"/><line x1="216.8" y1="308.3" x2="214.2" y2="300.7"/><line x1="142.6" y1="313.4" x2="144.1" y2="305.5"/><line x1="107.0" y1="301.7" x2="110.4" y2="294.5"/><line x1="48.9" y1="251.5" x2="55.5" y2="247.0"/><line x1="31.3" y1="215.6" x2="38.9" y2="213.1"/><line x1="27.3" y1="138.9" x2="35.2" y2="140.6"/><line x1="41.1" y1="101.4" x2="48.2" y2="105.1"/><line x1="93.8" y1="45.5" x2="97.9" y2="52.3"/><line x1="130.4" y1="29.5" x2="132.6" y2="37.2"/></g>
+<g stroke="#C9985C" stroke-width="2" ><line x1="170.0" y1="24.0" x2="170.0" y2="42.0"/><line x1="271.9" y1="65.4" x2="259.3" y2="78.3"/><line x1="316.0" y1="166.2" x2="298.0" y2="166.7"/><line x1="278.8" y1="267.3" x2="265.4" y2="255.3"/><line x1="180.0" y1="315.7" x2="178.8" y2="297.7"/><line x1="73.6" y1="279.7" x2="85.5" y2="266.1"/><line x1="24.3" y1="178.8" x2="42.2" y2="177.7"/><line x1="64.6" y1="69.0" x2="77.6" y2="81.5"/></g>
+<text x="170.0" y="52.5" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">秋分</text>
+<text x="255.1" y="87.1" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">立冬</text>
+<text x="292.0" y="171.4" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">冬至</text>
+<text x="260.9" y="255.8" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">立春</text>
+<text x="178.4" y="296.2" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">春分</text>
+<text x="89.5" y="266.1" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">立夏</text>
+<text x="48.2" y="181.8" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">夏至</text>
+<text x="81.9" y="90.1" text-anchor="middle" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">立秋</text>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 199.86 27.09" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="170.0" cy="24.0" r="3.4" fill="#C9985C" opacity="1.00"/>
+<circle cx="177.5" cy="24.2" r="3.4" fill="#D57C61" opacity="1.00"/>
+<circle cx="199.9" cy="27.1" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.5" cy="33.4" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.5" cy="48.2" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="277.1" cy="70.8" r="3.4" fill="#D57C61" opacity="0.60"/>
+<circle cx="310.2" cy="129.2" r="3.4" fill="#C9985C" opacity="0.60"/>
+<circle cx="316.0" cy="166.2" r="5" fill="#D9A94E" opacity="0.60"/>
+<circle cx="298.9" cy="238.6" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="177.5" cy="315.8" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.6" cy="279.7" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.6" cy="191.2" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.8" cy="108.1" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.4" cy="29.5" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="199.9" cy="27.1" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/><circle cx="199.9" cy="27.1" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<g><circle cx="114" cy="122" r="9" fill="#16140F" stroke="#3A352B" stroke-width="0.8"/><mask id="a-wax"><circle cx="114" cy="122" r="9" fill="white"/><ellipse cx="108.6" cy="122" rx="3.6" ry="9" fill="black"/></mask><circle cx="114" cy="122" r="9" fill="#B5AA99" mask="url(#a-wax)"/><text x="130" y="127" text-anchor="start" font-size="13" fill="#B5AA99" font-family="Georgia,'Songti SC',SimSun,serif">八月十三 · 秋分</text></g>
+<text x="170" y="152" text-anchor="middle" font-size="17" fill="#F2EBDF" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="198" text-anchor="middle" font-size="46" font-weight="500" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="212" y="184" text-anchor="start" font-size="13" fill="#B5AA99" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="216" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<path d="M 165 8 L 175 8 L 170 18 Z" fill="#C9985C"/>
+</svg></div>
+  <figcaption class="dial-note">按真实参数绘制：size 340 / ringR 146 / 焦点为「12 天后」。节气角度由 lunar-javascript 实算。</figcaption>
+</figure>
+
+<h4>新增元素</h4>
+<table>
+  <tr><th style="width:30%">元素</th><th>做法与作用</th></tr>
+  <tr><td>二十四节气</td><td>环内一圈短刻：八节（四立 + 二分二至）用暖金加长到 18px，其余十六个用暗线 8px；<strong>每个节气再向圆心拉一道极淡的径向格线</strong>（<code>r=138 → 104</code>）。格线才是「盘内不再是空的」的关键——只加刻度的话，环内仍是一片黑。一年从此有二十四格，而不只是十二格。</td></tr>
+  <tr><td>八节名</td><td>八个方位各一个衬线小字（秋分 / 立冬 / 冬至 / 立春 / 春分 / 立夏 / 夏至 / 立秋）。恰好每 45° 一个，八个方位全占满——这是盘上第一次出现「与用户无关的字」。</td></tr>
+  <tr><td>节气扇区</td><td>相邻两个节气之间的扇区（约 15 天），交替铺一层 <code>brand 7.5%</code> 的极淡底。让「半个月一格」的节律在盘面铺开，像历书的格子。<em>初稿用了 5.5%，渲染出来在墨底上几乎不可见，已提亮。</em></td></tr>
+  <tr><td>盘面</td><td>环内填实为 <code>canvas</code> 色。现在是全透明，圆只是一道线；填实之后它才成为一个「面」，节气扇区也才有地方落。</td></tr>
+  <tr><td>内圈虚线轨道</td><td><code>r = 104</code> 一圈虚线。给节气名与圆心之间留一道呼吸带，同时呼应设计稿里原本就有的那圈虚线。</td></tr>
+  <tr><td>圆心月相</td><td>名字上方加一枚 <code>r=9</code> 的月相图标（按农历日算盈亏）+「八月十三 · 秋分」。这是圆心第一次承载「今天」而非「焦点」。</td></tr>
+</table>
+
+<div class="cols">
+  <div class="box"><h5>最值的一点</h5><p>空盘不再难看。现在一个纪念日都没记时，圆心写着「还没有记下任何日子」，盘上空白一片。有了节气骨架，空盘也是一张完整的时宪书——它先成立，然后等用户往上添日子。</p></div>
+  <div class="box"><h5>要付的代价</h5><p>环内多了八个字和二十四道刻，视觉密度明显上升，光点不再那么「跳」。节气名在浅色主题（素笺）下对比度要单独调——<code>ink3</code> 在暖米白上偏弱。</p></div>
+  <div class="box"><h5>实现成本</h5><p>中。节气要算并缓存（按年，一天一次足够）；刻与扇区都是静态 SVG，不参与手势；只有八节名要跟着盘转——它们本来就在随盘旋转的那一层里。</p></div>
+</div>
+
+<h2><span class="no">方案乙</span>星图</h2>
+<p class="muted sans">向<strong>结构与信息密度</strong>要丰富。让「一年有多满」一眼可读——哪几个月拥挤，哪几个月空着。</p>
+
+<figure class="dial">
+  <div class="screen"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<circle cx="170" cy="170" r="146" fill="#1C1A15"/>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 243.00 43.56 L 232.00 62.61 A 124.00 124.00 0 0 0 170.00 46.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<path d="M 296.44 97.00 A 146.00 146.00 0 0 1 316.00 170.00 L 294.00 170.00 A 124.00 124.00 0 0 0 277.39 108.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<path d="M 296.44 243.00 A 146.00 146.00 0 0 1 243.00 296.44 L 232.00 277.39 A 124.00 124.00 0 0 0 277.39 232.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<path d="M 170.00 316.00 A 146.00 146.00 0 0 1 97.00 296.44 L 108.00 277.39 A 124.00 124.00 0 0 0 170.00 294.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<path d="M 43.56 243.00 A 146.00 146.00 0 0 1 24.00 170.00 L 46.00 170.00 A 124.00 124.00 0 0 0 62.61 232.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<path d="M 43.56 97.00 A 146.00 146.00 0 0 1 97.00 43.56 L 108.00 62.61 A 124.00 124.00 0 0 0 62.61 108.00 Z" fill="#F2EBDF" opacity="0.05"/>
+<line x1="170.0" y1="46.0" x2="170.0" y2="24.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="232.0" y1="62.6" x2="243.0" y2="43.6" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="277.4" y1="108.0" x2="296.4" y2="97.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="294.0" y1="170.0" x2="316.0" y2="170.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="277.4" y1="232.0" x2="296.4" y2="243.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="232.0" y1="277.4" x2="243.0" y2="296.4" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="170.0" y1="294.0" x2="170.0" y2="316.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="108.0" y1="277.4" x2="97.0" y2="296.4" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="62.6" y1="232.0" x2="43.6" y2="243.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="46.0" y1="170.0" x2="24.0" y2="170.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="62.6" y1="108.0" x2="43.6" y2="97.0" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<line x1="108.0" y1="62.6" x2="97.0" y2="43.6" stroke="#3A352B" stroke-width="0.8" stroke-dasharray="2 4"/>
+<text x="201.1" y="58.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">一</text>
+<text x="254.9" y="89.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">二</text>
+<text x="285.9" y="143.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">三</text>
+<text x="285.9" y="205.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">四</text>
+<text x="254.9" y="259.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">五</text>
+<text x="201.1" y="290.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">六</text>
+<text x="138.9" y="290.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">七</text>
+<text x="85.1" y="259.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">八</text>
+<text x="54.1" y="205.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">九</text>
+<text x="54.1" y="143.4" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">十</text>
+<text x="85.1" y="89.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">十一</text>
+<text x="138.9" y="58.6" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="Georgia,'Songti SC',SimSun,serif">十二</text>
+<circle cx="170" cy="170" r="146" fill="none" stroke="#3A352B" stroke-width="1.4"/>
+<path d="M 173.70 64.06 A 106.00 106.00 0 0 1 219.76 76.41" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 226.17 80.11 A 106.00 106.00 0 0 1 259.89 113.83" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 263.59 120.24 A 106.00 106.00 0 0 1 275.94 166.30" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 275.94 173.70 A 106.00 106.00 0 0 1 263.59 219.76" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 259.89 226.17 A 106.00 106.00 0 0 1 226.17 259.89" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 219.76 263.59 A 106.00 106.00 0 0 1 173.70 275.94" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 166.30 275.94 A 106.00 106.00 0 0 1 120.24 263.59" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 113.83 259.89 A 106.00 106.00 0 0 1 80.11 226.17" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 76.41 219.76 A 106.00 106.00 0 0 1 64.06 173.70" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 64.06 166.30 A 106.00 106.00 0 0 1 76.41 120.24" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 80.11 113.83 A 106.00 106.00 0 0 1 113.83 80.11" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 120.24 76.41 A 106.00 106.00 0 0 1 166.30 64.06" fill="none" stroke="#3A352B" stroke-width="6"/>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 177.52 24.19" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 177.52 24.19 A 146.00 146.00 0 0 1 199.86 27.09" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 199.86 27.09 A 146.00 146.00 0 0 1 221.50 33.39" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 221.50 33.39 A 146.00 146.00 0 0 1 250.46 48.17" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 250.46 48.17 A 146.00 146.00 0 0 1 277.15 70.83" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 277.15 70.83 A 146.00 146.00 0 0 1 310.18 129.20" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 310.18 129.20 A 146.00 146.00 0 0 1 315.95 166.24" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 315.95 166.24 A 146.00 146.00 0 0 1 298.87 238.62" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 298.87 238.62 A 146.00 146.00 0 0 1 177.52 315.81" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 177.52 315.81 A 146.00 146.00 0 0 1 73.62 279.67" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 73.62 279.67 A 146.00 146.00 0 0 1 25.55 191.23" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 25.55 191.23 A 146.00 146.00 0 0 1 37.77 108.11" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 37.77 108.11 A 146.00 146.00 0 0 1 130.40 29.47" fill="none" stroke="#C9985C" stroke-width="1.1" opacity="0.16"/>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 199.86 27.09" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round"/>
+<circle cx="170.0" cy="24.0" r="3.4" fill="#C9985C" opacity="1.00"/>
+<circle cx="177.5" cy="24.2" r="3.4" fill="#D57C61" opacity="1.00"/>
+<circle cx="199.9" cy="27.1" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.5" cy="33.4" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.5" cy="48.2" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="277.1" cy="70.8" r="3.4" fill="#D57C61" opacity="0.60"/>
+<circle cx="310.2" cy="129.2" r="3.4" fill="#C9985C" opacity="0.60"/>
+<circle cx="316.0" cy="166.2" r="5" fill="#D9A94E" opacity="0.60"/>
+<circle cx="298.9" cy="238.6" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="177.5" cy="315.8" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.6" cy="279.7" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.6" cy="191.2" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.8" cy="108.1" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.4" cy="29.5" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="173.8" cy="24.0" r="9" fill="none" stroke="#C9985C" stroke-width="0.9" opacity="0.75"/>
+<text x="173.8" y="28.0" text-anchor="middle" font-size="11" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2</text>
+<circle cx="199.9" cy="27.1" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/><circle cx="199.9" cy="27.1" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<text x="170" y="146" text-anchor="middle" font-size="17" fill="#F2EBDF" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="196" text-anchor="middle" font-size="46" font-weight="500" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="212" y="182" text-anchor="start" font-size="13" fill="#B5AA99" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="214" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<path d="M 165 8 L 175 8 L 170 18 Z" fill="#C9985C"/>
+</svg></div>
+  <figcaption class="dial-note">同样的日期数据，同样的光点。新增的是它周围的结构。</figcaption>
+</figure>
+
+<h4>新增元素</h4>
+<table>
+  <tr><th style="width:30%">元素</th><th>做法与作用</th></tr>
+  <tr><td>月份扇区</td><td>环内按 30° 切十二格，交替铺一层 <code>ink 3.5%</code> 的底。月份在盘上第一次成为可见的实体，而不只是环上的一道刻。</td></tr>
+  <tr><td>径向分界虚线</td><td>十二道从 <code>r=118</code> 到环的虚线，把扇区切开。视觉上明确「这是格子」，强化可读性。</td></tr>
+  <tr><td>月份汉字</td><td>每个扇区中点一枚「一二三…十二」，衬线小字，落在 <code>r=120</code>。中文数字比阿拉伯数字更有历书气，而且单字不会撑破 30° 的格子。<em>位置有讲究：初稿放在 r=131，会被环上焦点簇的圆圈从外侧压住「十二」和「一」。</em></td></tr>
+  <tr><td>内层月弧环</td><td><code>r=106</code> 一圈粗描边（5px），切成十二段、段间留 2° 缝。双层同心结构——外环是「日子」，内环是「月份」。</td></tr>
+  <tr><td>星座连线</td><td>相邻光点之间沿环画一道极淡短弧（16% 透明度）。疏密一眼可见，而且形态真的像星座连线——母题上站得住。</td></tr>
+  <tr><td>密集簇</td><td>角度相差不到 4° 的光点合并成一簇：一个圈 + 一个数字。示例里「今天」和「3 天后」就合成了一枚写着 <code>2</code> 的圈。这条直接解决缺口 3。</td></tr>
+</table>
+
+<div class="cols">
+  <div class="box"><h5>最值的一点</h5><p>密集簇。这是三版里唯一一个<strong>真正修复了缺陷</strong>而非只是加装饰的元素——三十个日子挤在年底时，现在是无解的，合簇之后每一枚都还在。</p></div>
+  <div class="box"><h5>要付的代价</h5><p>最像图表的一版。扇区 + 分界 + 数字 + 双层环，信息密度最高，但气质会往「数据看板」偏，离「观星」远了。浅色主题下尤其像甘特图。</p></div>
+  <div class="box"><h5>实现成本</h5><p>中。几何全部静态、好画；真正要写代码的是<strong>合簇算法</strong>（按角度聚类 + 定簇心 + 数字）+ 一个「点簇展开」的交互，否则用户点不到簇里的条目。</p></div>
+</div>
+
+<h2><span class="no">方案丙</span>夜观</h2>
+<p class="muted sans">向<strong>光影与氛围</strong>要丰富。元素最少，但把它做成一件会发光的器物。</p>
+
+<figure class="dial">
+  <div class="screen"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">
+<circle cx="170" cy="170" r="146" fill="#131109"/>
+<circle cx="170" cy="170" r="112" fill="#181510"/>
+<circle cx="170" cy="170" r="74" fill="#1E1A13"/>
+<circle cx="185.6" cy="133.2" r="0.9" fill="#F2EBDF" opacity="0.100"/>
+<circle cx="227.5" cy="62.4" r="0.9" fill="#F2EBDF" opacity="0.184"/>
+<circle cx="233.2" cy="160.2" r="0.9" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="306.8" cy="131.8" r="0.9" fill="#F2EBDF" opacity="0.212"/>
+<circle cx="244.0" cy="224.7" r="0.9" fill="#F2EBDF" opacity="0.156"/>
+<circle cx="178.5" cy="209.1" r="0.9" fill="#F2EBDF" opacity="0.100"/>
+<circle cx="185.3" cy="291.0" r="0.9" fill="#F2EBDF" opacity="0.184"/>
+<circle cx="134.2" cy="223.1" r="0.9" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="80.4" cy="280.2" r="0.9" fill="#F2EBDF" opacity="0.212"/>
+<circle cx="78.0" cy="168.1" r="0.9" fill="#F2EBDF" opacity="0.156"/>
+<circle cx="140.5" cy="143.0" r="0.9" fill="#F2EBDF" opacity="0.100"/>
+<circle cx="87.6" cy="80.1" r="0.9" fill="#F2EBDF" opacity="0.184"/>
+<circle cx="167.4" cy="106.1" r="0.9" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="176.9" cy="28.2" r="0.9" fill="#F2EBDF" opacity="0.212"/>
+<path d="M 170.00 24.00 A 146.00 146.00 0 0 1 243.00 43.56" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.50"/>
+<path d="M 243.00 43.56 A 146.00 146.00 0 0 1 296.44 97.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.42"/>
+<path d="M 296.44 97.00 A 146.00 146.00 0 0 1 316.00 170.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.34"/>
+<path d="M 316.00 170.00 A 146.00 146.00 0 0 1 296.44 243.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.27"/>
+<path d="M 296.44 243.00 A 146.00 146.00 0 0 1 243.00 296.44" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.21"/>
+<path d="M 243.00 296.44 A 146.00 146.00 0 0 1 170.00 316.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.16"/>
+<path d="M 170.00 316.00 A 146.00 146.00 0 0 1 97.00 296.44" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.12"/>
+<path d="M 97.00 296.44 A 146.00 146.00 0 0 1 43.56 243.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.10"/>
+<path d="M 43.56 243.00 A 146.00 146.00 0 0 1 24.00 170.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.08"/>
+<path d="M 24.00 170.00 A 146.00 146.00 0 0 1 43.56 97.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.06"/>
+<path d="M 43.56 97.00 A 146.00 146.00 0 0 1 97.00 43.56" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.05"/>
+<path d="M 97.00 43.56 A 146.00 146.00 0 0 1 170.00 24.00" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.04"/>
+<line x1="170.0" y1="24.0" x2="170.0" y2="37.0" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<line x1="316.0" y1="170.0" x2="303.0" y2="170.0" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<line x1="170.0" y1="316.0" x2="170.0" y2="303.0" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<line x1="24.0" y1="170.0" x2="37.0" y2="170.0" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<circle cx="170.0" cy="24.0" r="9.2" fill="#C9985C" opacity="0.17"/>
+<circle cx="177.5" cy="24.2" r="9.2" fill="#D57C61" opacity="0.17"/>
+<circle cx="199.9" cy="27.1" r="13.5" fill="#C9985C" opacity="0.17"/>
+<circle cx="221.5" cy="33.4" r="9.2" fill="#D9A94E" opacity="0.17"/>
+<circle cx="250.5" cy="48.2" r="9.2" fill="#8FA87C" opacity="0.17"/>
+<circle cx="277.1" cy="70.8" r="9.2" fill="#D57C61" opacity="0.17"/>
+<circle cx="310.2" cy="129.2" r="9.2" fill="#C9985C" opacity="0.17"/>
+<circle cx="316.0" cy="166.2" r="13.5" fill="#D9A94E" opacity="0.17"/>
+<circle cx="298.9" cy="238.6" r="9.2" fill="#8FA87C" opacity="0.17"/>
+<circle cx="177.5" cy="315.8" r="9.2" fill="#D57C61" opacity="0.17"/>
+<circle cx="73.6" cy="279.7" r="9.2" fill="#C9985C" opacity="0.17"/>
+<circle cx="25.6" cy="191.2" r="9.2" fill="#D9A94E" opacity="0.17"/>
+<circle cx="37.8" cy="108.1" r="9.2" fill="#8FA87C" opacity="0.17"/>
+<circle cx="130.4" cy="29.5" r="9.2" fill="#D57C61" opacity="0.17"/>
+<circle cx="170.0" cy="24.0" r="3.4" fill="#C9985C" opacity="1.00"/>
+<circle cx="177.5" cy="24.2" r="3.4" fill="#D57C61" opacity="1.00"/>
+<circle cx="199.9" cy="27.1" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.5" cy="33.4" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.5" cy="48.2" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="277.1" cy="70.8" r="3.4" fill="#D57C61" opacity="0.60"/>
+<circle cx="310.2" cy="129.2" r="3.4" fill="#C9985C" opacity="0.60"/>
+<circle cx="316.0" cy="166.2" r="5" fill="#D9A94E" opacity="0.60"/>
+<circle cx="298.9" cy="238.6" r="3.4" fill="#8FA87C" opacity="0.60"/>
+<circle cx="177.5" cy="315.8" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.6" cy="279.7" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.6" cy="191.2" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.8" cy="108.1" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.4" cy="29.5" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="199.9" cy="27.1" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/><circle cx="199.9" cy="27.1" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<circle cx="199.9" cy="27.1" r="22" fill="none" stroke="#C9985C" stroke-width="0.8" opacity="0.12"/>
+<text x="170" y="146" text-anchor="middle" font-size="17" fill="#F2EBDF" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="196" text-anchor="middle" font-size="46" font-weight="500" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="212" y="182" text-anchor="start" font-size="13" fill="#B5AA99" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="214" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<path d="M 165 8 L 175 8 L 170 18 Z" fill="#C9985C"/>
+</svg></div>
+  <figcaption class="dial-note">盘面用三层同心圆模拟纵深，外环由亮渐暗——越远的月份越沉。</figcaption>
+</figure>
+
+<h4>新增元素</h4>
+<table>
+  <tr><th style="width:30%">元素</th><th>做法与作用</th></tr>
+  <tr><td>盘面纵深</td><td>环内用三层同心圆由外向内微微提亮（<code>#131109 → #181510 → #1E1A13</code>）。现在盘是全平的；有纵深之后，光点才像是浮在盘面上而不是贴在上面。</td></tr>
+  <tr><td>星野</td><td>约三十枚 <code>r=0.8</code> 的极暗星点（透明度 6%–13%）铺在盘内。<strong>不随盘转</strong>——它是背景，转的是刻度。</td></tr>
+  <tr><td>时间光带</td><td>外环本身就是十二段弧，透明度从 <code>0.50</code> 递减到 <code>0.04</code>。时间的方向感第一次有了着落：越远越沉，一年的尽头几乎融进夜色。</td></tr>
+  <tr><td>光点辉光</td><td>每枚光点外裹一层 2.7 倍半径的同色圆（17% 透明度）。远光点只剩一点影子，近的会「亮」起来——这是把现有的亮度通道从「透明度」升级成「发光」。<strong>顺带解决了「光点太小看不清」</strong>：光点本体仍是 3.4px 的星，但视觉直径变成了 18px。</td></tr>
+  <tr><td>焦点呼吸</td><td>焦点光晕加到三环（10 / 16 / 22），最外一圈做缓慢呼吸。<em>静态图看不出，上机才有。</em></td></tr>
+  <tr><td>分至点刻</td><td>只保留春分 / 秋分 / 夏至 / 冬至四道金刻。是方案甲的极简版——不铺满，只留四个方位。</td></tr>
+</table>
+
+<div class="cols">
+  <div class="box"><h5>最值的一点</h5><p>这是三版里唯一直击「深色是主场」这个前提的。方案 B 当初选深色，理由就是「星盘只有在墨底上才亮得起来」——丙把这句理由真的做了出来。</p></div>
+  <div class="box"><h5>要付的代价</h5><p>信息增益最低。除了时间光带，其余都是氛围。如果目标是「看起来更丰富」，它满足；如果目标是「能用出更多东西」，它不满足。</p></div>
+  <div class="box"><h5>实现成本</h5><p>表面最低，但要小心两处：<strong>辉光会让 SVG 节点翻倍</strong>（每枚光点两个圆），三十个条目就是六十个节点；<strong>渐变在 react-native-svg 上比普通填色贵</strong>，所以盘面纵深建议用三层实心圆近似而不是 <code>RadialGradient</code>（上图就是这么画的）。</p></div>
+</div>
+
+<h2><span class="no">横向对比</span>三版放在一起看</h2>
+
+<table>
+  <tr>
+    <th style="width:20%"></th>
+    <th style="width:26.6%">甲 · 时宪</th>
+    <th style="width:26.6%">乙 · 星图</th>
+    <th style="width:26.6%">丙 · 夜观</th>
+  </tr>
+  <tr><td>加厚方向</td><td>历法深度</td><td>结构与密度</td><td>光影与氛围</td></tr>
+  <tr><td>新增元素</td><td class="n">6 类</td><td class="n">6 类</td><td class="n">6 类</td></tr>
+  <tr><td>盘内是否填实</td><td>是（纯色）</td><td>是（扇区）</td><td>是（三层纵深）</td></tr>
+  <tr><td>信息增益</td><td><span class="tag s">中</span> 多了一层与用户无关的时间</td><td><span class="tag">高</span> 密度可读、簇可数</td><td><span class="tag n">低</span> 主要是氛围</td></tr>
+  <tr><td>修复既有缺陷</td><td>空盘难看</td><td>密集处糊成一团</td><td>无</td></tr>
+  <tr><td>视觉气质</td><td>旧历书、有分量</td><td>星图、偏工具</td><td>观星、最耐看</td></tr>
+  <tr><td>浅色主题下</td><td><span class="tag a">需单独调</span> 节气名对比度</td><td><span class="tag c">风险最高</span> 像甘特图</td><td><span class="tag c">退化明显</span> 墨底才是主场</td></tr>
+  <tr><td>实现成本</td><td><span class="tag a">中</span></td><td><span class="tag a">中</span> 合簇要写算法</td><td><span class="tag s">低</span> 注意节点数</td></tr>
+  <tr><td>性能影响</td><td>小（静态 SVG）</td><td>小</td><td>中（节点翻倍）</td></tr>
+  <tr><td>动效负担</td><td>无新增</td><td>无新增</td><td>焦点呼吸 +1 条</td></tr>
+</table>
+
+<h2><span class="no">我的建议</span>甲 + 丙，分两步</h2>
+
+<div class="pick">
+  <div class="p hot">
+    <h5>第一步 · 甲 + 丙<span class="tag">推荐</span></h5>
+    <p class="sub">节气骨架 + 盘面纵深</p>
+    <ul>
+      <li>太阳系骨架：盘面填实、三层纵深、廿四节气刻、八节名、节气扇区、内圈虚线</li>
+      <li>光影：时间光带、光点辉光、分至点刻</li>
+      <li>先不做：圆心月相（挤，收益小）</li>
+      <li>理由：一个给「骨」，一个给「肉」。甲让盘有资格叫天象，丙让它真的亮得起来。两者都在「深色主场」这个前提内，不打架</li>
+    </ul>
+  </div>
+  <div class="p">
+    <h5>第二步 · 从乙取一样</h5>
+    <p class="sub">只取密集簇</p>
+    <ul>
+      <li>乙整版气质偏工具，不建议全上</li>
+      <li>但<strong>密集簇是唯一的真修复</strong>：条目一多，现在的盘无解</li>
+      <li>可独立实现，不依赖扇区与双层环</li>
+      <li>建议与第一步一起做，因为都是「光点层」的改动</li>
+    </ul>
+  </div>
+</div>
+
+<div class="verdict">
+  <p class="vh">我不推荐什么</p>
+  <p><strong>不建议十二月份扇区 + 月份汉字那一路。</strong>它在浅色主题下最像甘特图，而且「一年十二个月」这件事用户本来就知道，盘上多出来的是结构而非信息。真正值得加的是它旁边那个密集簇——那是解决真问题，不是加装饰。</p>
+</div>
+
+<h2><span class="no">技术前提</span>要先动一次结构</h2>
+<p>现在的实现是<strong>整整一层 SVG 一起旋转</strong>：</p>
+<pre style="font-family:var(--sans);font-size:13px;line-height:1.9;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 20px;overflow-x:auto;margin:0 0 22px"><code style="background:none;color:var(--ink);padding:0">&lt;Animated.View style={ringStyle}&gt;      // 这一层整体转
+  &lt;Svg&gt; 轨道 + 刻度 + 光点 + 金弧 &lt;/Svg&gt;
+&lt;/Animated.View&gt;</code></pre>
+<p>三版里都有<strong>不该跟着转</strong>的东西：丙的星野（背景）、乙的月份汉字（转起来会倒立——正立文字不能放在旋转层里）、甲的节气扇区（如果希望它像印在盘上的底纹）。所以需要把它拆成两层：</p>
+<ul>
+  <li><strong>静止层</strong>——盘面、星野、月份汉字，只用普通 <code>&lt;Svg&gt;</code>，不动</li>
+  <li><strong>旋转层</strong>——刻度、节气刻、八节名、光点、金弧，包在原来那层里</li>
+</ul>
+<p>两层叠放，尺寸一致。这是个干净的重构，改完之后上面三版的任何一个元素都只是往对应层里加一段静态 SVG，不再动结构。</p>
+
+<footer>
+  岁时 · 首页星盘强化方案 · 2026-09-23<br>
+  图中节气角度由 lunar-javascript 实算（以秋分为 0°，366 天映射 360°）；<br>
+  三张盘共用同一套示例数据（14 个日子，焦点为「12 天后」），唯一变量是该方案新增的元素。
+</footer>
+
+</div>
+</body>
+</html>

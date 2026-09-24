@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>岁时 · 夜观盘实现预览</title>
+<style>
+  :root{
+    --paper:#F7F4EF; --card:#FFFFFF; --ink:#2B241F; --ink2:#6B6055; --ink3:#9A8D80;
+    --line:#E3DCD1; --line2:#EBE5DB; --brand:#8C5A34; --brand-d:#6B4224; --brand-bg:#F3E9DE;
+    --serif:Georgia,"Songti SC","Source Han Serif SC",SimSun,serif;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--serif);
+    font-size:16px;line-height:2.0;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:72px 32px 120px}
+  header{border-bottom:1px solid var(--line);padding-bottom:36px;margin-bottom:48px}
+  .eyebrow{font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--ink3);margin:0 0 18px}
+  h1{font-size:34px;line-height:1.5;font-weight:400;margin:0 0 20px}
+  h1 b{font-weight:400;color:var(--brand)}
+  .lede{font-size:16.5px;color:var(--ink2);margin:0;max-width:66ch}
+  h2{font-size:23px;font-weight:400;margin:72px 0 6px;padding-top:28px;border-top:1px solid var(--line2)}
+  h2 .no{font-family:var(--sans);font-size:12px;color:var(--brand);letter-spacing:.16em;
+    display:block;margin-bottom:10px}
+  h3{font-size:19px;font-weight:400;margin:40px 0 10px}
+  p{margin:0 0 20px}
+  .muted{color:var(--ink2)}
+  .sans{font-family:var(--sans);font-size:14.5px;line-height:1.95}
+  em{font-style:normal;color:var(--brand-d);border-bottom:1px solid var(--brand-bg)}
+  strong{font-weight:600}
+  code{font-family:var(--sans);font-size:13px;background:var(--brand-bg);color:var(--brand-d);
+    padding:1px 6px;border-radius:5px}
+  figure.dial{margin:0;text-align:center}
+  .screen{display:block;border-radius:20px;padding:20px;
+    box-shadow:0 1px 2px rgba(43,36,31,.06),0 12px 32px -12px rgba(43,36,31,.28)}
+  .screen svg{display:block;width:100%;height:auto}
+  figcaption{font-family:var(--sans);font-size:12.5px;color:var(--ink3);margin-top:12px;line-height:1.7}
+  .grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:36px 28px;margin:34px 0}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:30px 24px;margin:30px 0}
+  .grid3 .screen{border-radius:18px;padding:16px}
+  .tname{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--ink);margin:0 0 2px}
+  table{width:100%;border-collapse:collapse;margin:22px 0 26px;font-family:var(--sans);
+    font-size:13.5px;line-height:1.75}
+  th{text-align:left;font-weight:600;color:var(--ink2);font-size:12.5px;
+    border-bottom:1px solid var(--line);padding:10px 12px 10px 0}
+  td{border-bottom:1px solid var(--line2);padding:11px 12px 11px 0;vertical-align:top}
+  td:first-child{white-space:nowrap;color:var(--brand-d);font-weight:600}
+  tr:last-child td{border-bottom:none}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:12px;
+    padding:20px 22px;margin:26px 0;font-family:var(--sans);font-size:13.5px;line-height:1.9;
+    color:var(--ink2)}
+  .box b{color:var(--ink)}
+  footer{border-top:1px solid var(--line);margin-top:80px;padding-top:28px;
+    font-family:var(--sans);font-size:12.5px;color:var(--ink3);line-height:1.9}
+  @media (max-width:640px){ .wrap{padding:44px 20px 80px} h1{font-size:26px} h2{font-size:20px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">岁时 · 首页星盘 · 方案丙</p>
+  <h1>夜观<br><b>用真几何渲染的实现预览</b></h1>
+  <p class="lede">下面每一张盘都是 <code>src/lib/dial.ts</code> 编译后直接跑出来的 —— 与手机上是同一套函数、同一组常量，只是省掉了会动的部分（光点逐个显影、焦点呼吸、盘面旋转）。今天取 2026 年秋分，因为「今天恰好落在一道分至刻上」是最难看的边界，先把它过掉。</p>
+</header>
+
+<h2><span class="no">一 · 四套主题</span>深色三套是主场，素笺是唯一需要单独确认的</h2>
+<p class="muted sans">方案丙往「光影」要丰富，方向本身就是偏深色的。所以真正要盯的是素笺：盘面纵深在浅底上必须读成<em>纸上一处浅浮雕</em>，而不是一块脏灰。如果素笺这一张撑不住，可选的做法是让星野在浅色档下再淡一档 —— 但先看，别提前优化。</p>
+
+<div class="grid4">
+
+<figure class="dial">
+  <div class="screen" style="background:#16140F"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#131109"/>
+<circle cx="170" cy="170" r="111.98" fill="#171410"/>
+<circle cx="170" cy="170" r="74.02" fill="#1A1711"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#F2EBDF" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#F2EBDF" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#F2EBDF" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#F2EBDF" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#F2EBDF" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#F2EBDF" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#F2EBDF" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#F2EBDF" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#F2EBDF" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#F2EBDF" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#F2EBDF" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#F2EBDF" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#F2EBDF" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#F2EBDF" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#F2EBDF" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#F2EBDF" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#F2EBDF" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#F2EBDF" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#F2EBDF" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#F2EBDF" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#F2EBDF" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#C9985C" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#C9985C"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#C9985C" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#C9985C" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#D57C61" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#D57C61" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#C9985C" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#D9A94E" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#D57C61" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#D57C61" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#C9985C" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#C9985C" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#D9A94E" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#D9A94E" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#C9985C" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#D9A94E" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#8FA87C" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#C9985C" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g><text x="170" y="132" text-anchor="middle" font-size="17" fill="#F2EBDF" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="210" y="167" text-anchor="start" font-size="13" fill="#B5AA99" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="204" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<text x="170" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">农历八月廿五</text>
+<text x="170" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">第 3 周年</text><path d="M 165 2 L 175 2 L 170 9 Z" fill="#C9985C"/></svg></div>
+  <figcaption><p class="tname">玄夜</p>墨底暖金（默认）</figcaption>
+</figure>
+
+<figure class="dial">
+  <div class="screen" style="background:#0F1419"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#0C1014"/>
+<circle cx="170" cy="170" r="111.98" fill="#0F1419"/>
+<circle cx="170" cy="170" r="74.02" fill="#11171C"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#E8EEF4" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#E8EEF4" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#E8EEF4" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#E8EEF4" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#E8EEF4" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#E8EEF4" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#E8EEF4" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#E8EEF4" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#E8EEF4" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#E8EEF4" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#E8EEF4" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#E8EEF4" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#E8EEF4" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#E8EEF4" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#E8EEF4" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#E8EEF4" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#E8EEF4" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#E8EEF4" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#E8EEF4" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#E8EEF4" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#E8EEF4" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#E8EEF4" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#E8EEF4" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#E8EEF4" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#E8EEF4" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#E8EEF4" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#8FB8D8" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#8FB8D8" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#8FB8D8" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#8FB8D8" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#8FB8D8" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#8FB8D8" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#8FB8D8"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#8FB8D8" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#8FB8D8" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#8FB8D8" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#D98A7A" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#D98A7A" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#8FB8D8" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#8FB8D8" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#D6B36A" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#D6B36A" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#8FAE9C" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#8FAE9C" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#D98A7A" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#D98A7A" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#8FB8D8" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#8FB8D8" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#D6B36A" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#D6B36A" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#8FAE9C" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#8FAE9C" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#D98A7A" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#D98A7A" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#8FB8D8" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#8FB8D8" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#D6B36A" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#D6B36A" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#8FAE9C" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#8FAE9C" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#D98A7A" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#D98A7A" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#8FB8D8" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#8FB8D8" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#8FB8D8" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A6B4C2" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g><text x="170" y="132" text-anchor="middle" font-size="17" fill="#E8EEF4" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="#8FB8D8" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="210" y="167" text-anchor="start" font-size="13" fill="#A6B4C2" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="204" text-anchor="middle" font-size="13" fill="#75838F" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<text x="170" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="#75838F" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">农历八月廿五</text>
+<text x="170" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="#8FB8D8" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">第 3 周年</text><path d="M 165 2 L 175 2 L 170 9 Z" fill="#8FB8D8"/></svg></div>
+  <figcaption><p class="tname">苍青</p>墨蓝月白</figcaption>
+</figure>
+
+<figure class="dial">
+  <div class="screen" style="background:#0F1512"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#0C110E"/>
+<circle cx="170" cy="170" r="111.98" fill="#0F1511"/>
+<circle cx="170" cy="170" r="74.02" fill="#111813"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#E6EFE9" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#E6EFE9" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#E6EFE9" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#E6EFE9" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#E6EFE9" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#E6EFE9" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#E6EFE9" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#E6EFE9" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#E6EFE9" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#E6EFE9" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#E6EFE9" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#E6EFE9" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#E6EFE9" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#E6EFE9" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#E6EFE9" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#E6EFE9" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#E6EFE9" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#E6EFE9" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#E6EFE9" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#E6EFE9" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#E6EFE9" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#E6EFE9" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#E6EFE9" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#E6EFE9" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#E6EFE9" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#E6EFE9" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#C8A96B" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#C8A96B" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#C8A96B" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#C8A96B" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#C8A96B" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#C8A96B" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#C8A96B"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#C8A96B" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#C8A96B" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#C8A96B" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#D68A6E" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#D68A6E" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#C8A96B" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#C8A96B" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#D8B25A" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#D8B25A" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#93B083" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#93B083" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#D68A6E" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#D68A6E" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#C8A96B" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#C8A96B" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#D8B25A" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#D8B25A" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#93B083" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#93B083" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#D68A6E" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#D68A6E" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#C8A96B" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#C8A96B" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#D8B25A" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#D8B25A" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#93B083" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#93B083" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#D68A6E" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#D68A6E" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#C8A96B" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#C8A96B" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#C8A96B" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#A3B5AB" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g><text x="170" y="132" text-anchor="middle" font-size="17" fill="#E6EFE9" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="#C8A96B" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="210" y="167" text-anchor="start" font-size="13" fill="#A3B5AB" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="204" text-anchor="middle" font-size="13" fill="#728478" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<text x="170" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="#728478" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">农历八月廿五</text>
+<text x="170" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="#C8A96B" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">第 3 周年</text><path d="M 165 2 L 175 2 L 170 9 Z" fill="#C8A96B"/></svg></div>
+  <figcaption><p class="tname">墨玉</p>墨绿玉色</figcaption>
+</figure>
+
+<figure class="dial">
+  <div class="screen" style="background:#F7F4EF"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#EFE8DD"/>
+<circle cx="170" cy="170" r="111.98" fill="#F1EBE1"/>
+<circle cx="170" cy="170" r="74.02" fill="#F3EEE5"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#2B241F" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#2B241F" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#2B241F" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#2B241F" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#2B241F" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#2B241F" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#2B241F" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#2B241F" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#2B241F" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#2B241F" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#2B241F" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#2B241F" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#2B241F" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#2B241F" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#2B241F" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#2B241F" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#2B241F" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#2B241F" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#2B241F" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#2B241F" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#2B241F" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#2B241F" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#2B241F" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#2B241F" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#2B241F" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#2B241F" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#8C5A34" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#8C5A34" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#8C5A34" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#8C5A34" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#8C5A34" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#8C5A34" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#8C5A34"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#8C5A34" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#8C5A34" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#8C5A34" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#AA523D" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#AA523D" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#8C5A34" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#8C5A34" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#926521" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#926521" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#5F7355" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#5F7355" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#AA523D" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#AA523D" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#8C5A34" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#8C5A34" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#926521" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#926521" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#5F7355" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#5F7355" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#AA523D" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#AA523D" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#8C5A34" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#8C5A34" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#926521" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#926521" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#5F7355" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#5F7355" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#AA523D" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#AA523D" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#8C5A34" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#8C5A34" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#8C5A34" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#6B6055" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g><text x="170" y="132" text-anchor="middle" font-size="17" fill="#2B241F" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="#8C5A34" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="210" y="167" text-anchor="start" font-size="13" fill="#6B6055" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="204" text-anchor="middle" font-size="13" fill="#9A8D80" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<text x="170" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="#9A8D80" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">农历八月廿五</text>
+<text x="170" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="#8C5A34" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">第 3 周年</text><path d="M 165 2 L 175 2 L 170 9 Z" fill="#8C5A34"/></svg></div>
+  <figcaption><p class="tname">素笺</p>暖米白 —— 唯一需要单独确认的一套</figcaption>
+</figure>
+</div>
+
+<h2><span class="no">二 · 元素分层</span>转的是刻度，不是天</h2>
+<p class="muted sans">这一版把盘拆成了两层。下面把玄夜那一张拆开给你看：左边是<strong>静止层</strong>（盘面纵深＋星野），中间是<strong>旋转层</strong>（光带、月轮、四道分至刻、今天刻、金弧、光点、焦点），右边是合成后的终态。拖动时只有中间那一层在转 —— 星野必须钉死，否则「天在转」的错觉一建立，拖动这个操作就失去了隐喻。<em>月轮是这一层里唯一带字的元素</em>，也是唯一需要反向自转的元素。</p>
+
+<div class="grid3">
+
+<figure class="dial">
+  <div class="screen" style="background:#16140F"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#131109"/>
+<circle cx="170" cy="170" r="111.98" fill="#171410"/>
+<circle cx="170" cy="170" r="74.02" fill="#1A1711"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#F2EBDF" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#F2EBDF" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#F2EBDF" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#F2EBDF" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#F2EBDF" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#F2EBDF" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#F2EBDF" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#F2EBDF" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#F2EBDF" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#F2EBDF" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#F2EBDF" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#F2EBDF" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#F2EBDF" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#F2EBDF" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#F2EBDF" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#F2EBDF" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#F2EBDF" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#F2EBDF" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#F2EBDF" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#F2EBDF" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#F2EBDF" opacity="0.144"/></svg></div>
+  <figcaption><p class="tname">静止层</p>三层同心圆 + 26 枚星点</figcaption>
+</figure>
+
+<figure class="dial">
+  <div class="screen" style="background:#16140F"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#C9985C" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#C9985C"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#C9985C" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#C9985C" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#D57C61" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#D57C61" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#C9985C" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#D9A94E" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#D57C61" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#D57C61" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#C9985C" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#C9985C" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#D9A94E" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#D9A94E" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#C9985C" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#D9A94E" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#8FA87C" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#C9985C" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(0.00 93.28 71.32)">8</text></svg></div>
+  <figcaption><p class="tname">旋转层</p>光带 / 月轮 / 刻度 / 光点 / 焦点</figcaption>
+</figure>
+
+<figure class="dial">
+  <div class="screen" style="background:#16140F"><svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#131109"/>
+<circle cx="170" cy="170" r="111.98" fill="#171410"/>
+<circle cx="170" cy="170" r="74.02" fill="#1A1711"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#F2EBDF" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#F2EBDF" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#F2EBDF" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#F2EBDF" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#F2EBDF" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#F2EBDF" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#F2EBDF" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#F2EBDF" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#F2EBDF" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#F2EBDF" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#F2EBDF" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#F2EBDF" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#F2EBDF" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#F2EBDF" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#F2EBDF" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#F2EBDF" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#F2EBDF" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#F2EBDF" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#F2EBDF" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#F2EBDF" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#F2EBDF" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#C9985C" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#C9985C"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="170.00" cy="24.00" r="9.18" fill="#C9985C" opacity="0.170"/>
+<circle cx="170.00" cy="24.00" r="3.4" fill="#C9985C" opacity="1"/>
+<circle cx="177.52" cy="24.19" r="9.18" fill="#D57C61" opacity="0.170"/>
+<circle cx="177.52" cy="24.19" r="3.4" fill="#D57C61" opacity="1"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#C9985C" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="221.50" cy="33.39" r="9.18" fill="#D9A94E" opacity="0.154"/>
+<circle cx="221.50" cy="33.39" r="3.4" fill="#D9A94E" opacity="0.85"/>
+<circle cx="250.46" cy="48.17" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="250.46" cy="48.17" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="277.15" cy="70.83" r="9.18" fill="#D57C61" opacity="0.126"/>
+<circle cx="277.15" cy="70.83" r="3.4" fill="#D57C61" opacity="0.6"/>
+<circle cx="310.18" cy="129.20" r="9.18" fill="#C9985C" opacity="0.126"/>
+<circle cx="310.18" cy="129.20" r="3.4" fill="#C9985C" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="13.50" fill="#D9A94E" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="5" fill="#D9A94E" opacity="0.6"/>
+<circle cx="298.87" cy="238.62" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="298.87" cy="238.62" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="177.52" cy="315.81" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="177.52" cy="315.81" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="73.62" cy="279.67" r="9.18" fill="#C9985C" opacity="0.106"/>
+<circle cx="73.62" cy="279.67" r="3.4" fill="#C9985C" opacity="0.42"/>
+<circle cx="25.55" cy="191.23" r="9.18" fill="#D9A94E" opacity="0.106"/>
+<circle cx="25.55" cy="191.23" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="37.77" cy="108.11" r="9.18" fill="#8FA87C" opacity="0.106"/>
+<circle cx="37.77" cy="108.11" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="130.40" cy="29.47" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="130.40" cy="29.47" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#C9985C" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g><text x="170" y="132" text-anchor="middle" font-size="17" fill="#F2EBDF" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">结婚纪念日</text>
+<text x="170" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">12</text>
+<text x="210" y="167" text-anchor="start" font-size="13" fill="#B5AA99" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">天后</text>
+<text x="170" y="204" text-anchor="middle" font-size="13" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">2026 年 10 月 5 日 · 星期一</text>
+<text x="170" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="#8A7F6E" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">农历八月廿五</text>
+<text x="170" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="#C9985C" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif">第 3 周年</text><path d="M 165 2 L 175 2 L 170 9 Z" fill="#C9985C"/></svg></div>
+  <figcaption><p class="tname">合成</p>旋转层已转到焦点停在指针下</figcaption>
+</figure>
+</div>
+
+<h2><span class="no">三 · 参数</span>图上的每个数字都来自源码</h2>
+
+<table>
+  <tr><th style="width:34%">参数</th><th>值</th></tr>
+  <tr><td>盘面纵深</td><td>三层同心圆，半径 <code>ringR × [1, 0.767, 0.507]</code>。用实心圆近似径向渐变，不用 <code>RadialGradient</code> —— 原生渐变比实心圆贵，而这里只有三档明度</td></tr>
+  <tr><td>四套 bed 色</td><td>玄夜 <code>#131109 → #1A1711</code>　苍青 <code>#0C1014 → #11171C</code>　墨玉 <code>#0C110E → #111813</code>　素笺 <code>#EFE8DD → #F3EEE5</code><br><strong>三层之间的色差刻意收在 2~4 级</strong>：同等的色差落在半径小的圈上更容易读成硬边（弧长短、两侧面积都小）。素笺尤其 —— 它在浅底上稍一拉开就变成「洋葱圈」</td></tr>
+  <tr><td>星野</td><td>26 枚，半径落在 <code>ringR × [0.28, 0.82]</code>，透明度 6%–19%。<code>mulberry32</code> 固定种子 <code>0x5e17e5</code> —— 用 <code>Math.random</code> 的话每次重渲染星星会跳。前三个：(165.9, 76.8) r=1.00 o=0.153 ｜ (202.6, 72.8) r=0.99 o=0.116 ｜ (194.3, 108.1) r=1.01 o=0.158</td></tr>
+  <tr><td>时间光带</td><td>按真实月份边界切段，端点补 0° 与 360°，12 段。透明度在 <code>0.50 → 0.42 → 0.34 → 0.27 → 0.21 → 0.16 → 0.12 → 0.10 → 0.08 → 0.06 → 0.05 → 0.04</code> 上按段中角度线性插值，而不是按序号查表 —— 段数会随当月位置浮动</td></tr>
+  <tr><td>分至点刻</td><td>四道，角度由 <code>nextSolarTerms()</code> 实算：秋分 0天 ｜ 冬至 90天 ｜ 春分 179天 ｜ 夏至 271天。<strong>不是 0/90/180/270</strong> —— 那只是「今天 + 90n 天」，不是真正的节气</td></tr>
+  <tr><td>光点辉光</td><td>本体仍是 3.4px（置顶 5px）的星，外裹 <code>2.7</code> 倍半径同色圆。辉光透明度 <code>0.06 → 0.17</code> 随亮度升，下限不归零</td></tr>
+  <tr><td>焦点呼吸</td><td>第三环 <code>r=22</code>，透明度在 <code>0.05 ↔ 0.18</code> 之间来回，周期 2800ms。静态图取中点，上机才看得到</td></tr>
+  <tr><td>月轮</td><td>十二段各配一个公历月号，落在<strong>本段中点</strong>；末段（被视界切过的那一个月，可能长于一个月）封顶在半个月 <code>15.25°</code>，免得数字漂到下个月的地界上。半径 <code>ringR − 21</code>，透明度在 <code>0.86 → 0.80 → 0.74 → 0.69 → 0.65 → 0.61 → 0.58 → 0.55 → 0.52 → 0.50 → 0.48 → 0.46</code> 上按角度插值。<br>今天取 9/23，本月那段只剩 8 天 → 3.9° 起标「9」；十二枚落点：9@4° 10@23° 11@53° 12@83° 1@114° 2@143° 3@172° 4@202° 5@232° 6@262° 7@292° 8@322°</td></tr>
+  <tr><td>月轮为什么是数字</td><td><strong>不是刻度，是信息。</strong>光带已经把一年切成十二段，段与段的接缝就是月份边界 —— 再压一层灰线只是把同一件事说两遍。但接缝里没有归属：站在环上任意一处，读不出「这是几月」。数字补的正是这一格</td></tr>
+  <tr><td>月轮为什么能正立</td><td>数字的位置必须跟着盘转（否则读到的是错月），但位置一转字面就跟着转，转到下半圈成了倒立的字 —— 这正是硬性约定「正立文字不能放旋转层」要挡的事。解法是每枚数字绕<strong>自己的中心</strong>转 <code>−rotation</code>：位置随盘、字面永远朝上，像罗盘刻度圈上的数字。组件里是 12 份只含一个 rotate 的 animated style，全程在 UI 线程求值</td></tr>
+  <tr><td>已撤掉</td><td>十二道月份刻度。光带已经画出十二段，再压一层灰线是把同一件事说两遍；环上真正稀缺的是分至</td></tr>
+</table>
+
+<div class="box">
+<b>月份读不出来的那个缺口，补上了。</b>撤掉月份刻度之后，环上的分段边界还在，但归属没了。这一版补的<em>不是刻度</em>（那才是「说两遍」），而是<strong>信息</strong>：每段段中一个公历月号。位置跟着盘转、字面反向自转保持正立，所以拖动时十二个数一圈走、永远可读。<br><br>月轮的透明度曲线<strong>刻意没有照抄光带</strong>：光带末端压到 0.04，对一段弧还剩位置感，对 11.5px 的数字就是彻底消失 —— 数字是用来读的，不是用来发光的，所以下限抬到 0.46，只做「远月更静」的暗示。起点也没有到 1：月轮是环上的第二信息层，不该与光点、金弧争亮度。
+</div>
+
+<h2><span class="no">四 · 静态图看不到的部分</span>上机才能验的四件事</h2>
+<ul class="sans muted">
+  <li><strong>月轮的反向自转</strong> —— 静态图里十二个数字只是正立着摆在那儿；上机拖动时才会看到它们一边绕环走、一边始终正立，像罗盘刻度圈。这一层有没有跟错方向、有没有抖，只有手指能验</li>
+  <li><strong>焦点呼吸</strong> —— 最外一环 2.8 秒一个来回，只在这张图里取了个中点</li>
+  <li><strong>光点逐个显影</strong> —— 每个点延迟 <code>i × 40ms</code> 亮起，30 枚以上取消错开（否则要等一秒多）</li>
+  <li><strong>拖动的手感</strong> —— 辉光让光点的视觉直径从 3.4px 变成约 18px，逻辑命中范围没变，但视觉上「够得着」了。这一条需要手指验</li>
+</ul>
+
+<footer>
+几何与视觉参数：<code>src/lib/dial.ts</code>　｜　组件：<code>src/components/domain/SkyDial.tsx</code><br>
+分至点：<code>src/lib/calendar/lunar.ts · nextSolarTerms()</code>　｜　令牌：<code>src/constants/theme.ts</code><br>
+重新生成：<code>node_modules/.bin/tsc -p scripts/tsconfig.caltest.json &amp;&amp; node scripts/dial-preview.cjs</code>
+</footer>
+
+</div>
+</body>
+</html>
