@@ -1,0 +1,125 @@
+岁时 · Android 安装包  v1.2.0
+================================================================
+
+文件     suishi-v1.2.0-arm64.apk
+         （本地工作区里的原文件名为「岁时-v1.2.0-arm64.apk」，内容完全一致 ——
+          GitHub 附件名不支持非 ASCII 字符，会把中文整段抹掉，故改用 suishi- 前缀）
+包名     com.suishi.app
+版本     1.2.0（versionCode 3）
+架构     arm64-v8a（仅 64 位 ARM，2017 年后的安卓机型基本都支持）
+大小     47,463,023 字节（45.26 MB）
+SHA256   8693e5f530f49f13646196c3d5f65827791290ac78d651d2068e9115cb317765
+
+targetSdk 36 · minSdk 24（Android 7.0 及以上）
+compileSdk 36
+
+
+校验下载是否完整
+----------------------------------------------------------------
+Windows 命令行：
+
+    certutil -hashfile suishi-v1.2.0-arm64.apk SHA256
+
+输出应与上面那串 64 位十六进制完全一致。
+
+
+安装
+----------------------------------------------------------------
+1. 把 apk 传到手机（微信文件传输 / 数据线 / 网盘都行）。
+2. 在手机上点开它，系统会提示「未知来源应用」——
+   允许「文件管理」或对应应用的安装权限即可。
+3. 安装完成后桌面出现「岁时」。
+
+命令行安装：
+
+    adb install -r suishi-v1.2.0-arm64.apk
+
+已经装了 v1.1.0 或 v1.0.0 的话**直接覆盖安装**即可 —— 不用卸载，数据不丢
+（同一把密钥签名，versionCode 从 2 / 1 升到 3）。
+
+若报 INSTALL_FAILED_UPDATE_INCOMPATIBLE（之前用 Expo Go 装过，或用了另一套签名），
+需要先 adb uninstall com.suishi.app —— 但**卸载会一并清掉应用内全部数据**。
+需要保留的话先在「我的 → 数据」里导出备份，装完再导入。
+
+回退到更低 versionCode 的旧包必须**先卸载**（系统会拒绝降级覆盖），代价同上。
+
+
+图标没变？
+----------------------------------------------------------------
+桌面上的图标是启动器**缓存**过的。装完新包后如果看着还是旧样子，属正常：
+
+· 多数手机的启动器会在几秒到几十秒内自己刷新；
+· 不刷新的话，把「岁时」从桌面拖掉再重新从应用列表拖回来；
+· 再不行就重启一次手机 —— 启动器只在开机时重读一遍图标资源。
+
+（图标资源本身已从包内反查核对：彩色层 / 单色层 / 圆角层三套都换成了新版。）
+
+
+权限与隐私
+----------------------------------------------------------------
+实际申请 4 项：
+
+    android.permission.INTERNET              由 Expo 运行时带入，应用自身不发起任何网络请求
+    android.permission.VIBRATE               交互触感反馈
+    android.permission.READ_EXTERNAL_STORAGE  ／ 这两项由 expo-file-system 带入，
+    android.permission.WRITE_EXTERNAL_STORAGE   都带 maxSdkVersion="32" —— 只在 Android 12L
+                                                及以下才申请，Android 13 以上根本不请求
+
+备份导出**不需要任何存储权限** —— 走的是应用自己的缓存目录 + 系统分享面板。
+
+已从模板默认清单中显式移除：RECORD_AUDIO、SYSTEM_ALERT_WINDOW。没有录音、没有悬浮窗。
+
+数据全部存在手机本地的 SQLite 里。不联网、不注册、无云端。
+
+
+启动屏
+----------------------------------------------------------------
+背景固定为墨色 #16140F，不跟随系统深浅色。
+
+这是设计意图（视觉方案「天象」深色优先，三深一浅：玄夜 / 苍青 / 墨玉 + 素笺）。
+该色本身就是暗底，浅色与深色模式下都是同一片墨，不存在闪白问题。
+
+
+首次启动
+----------------------------------------------------------------
+数据库是空的，首页星盘会显示「星盘还是空的」，点中间的按钮开始记第一笔。
+本地通知没做（已定案，刻意不做），所以不会有到日提醒。
+
+
+签名
+----------------------------------------------------------------
+签名者   CN=Suishi, OU=Personal, O=Suishi, C=CN
+算法     RSA 2048 / PKCS12
+证书指纹 SHA-256  45907724dc1eee8b683195f6728b1ace92e1daf1341590293424015f9fd7b447
+
+密钥库   android/app/suishi-release.keystore
+凭据     android/key.properties
+备份     岁时-签名密钥信息.txt
+
+⚠️ 密钥文件丢了就再也签不出能覆盖安装的包，只能卸载重装并丢数据。
+   这两个文件（或 岁时-签名密钥信息.txt）**不入库**，请另存到安全的地方。
+
+
+重新构建
+----------------------------------------------------------------
+源码与构建脚本在仓库里（MIT）。出 Android 安装包：
+
+    node scripts/prebuild-android.cjs     # 仅首次
+    node scripts/patch-android.cjs        # prebuild 后必套
+    node scripts/gen-keystore.cjs         # 仅一次，生成 release 签名密钥
+    node scripts/build-apk.cjs            # 出包（耗时较长，建议后台跑）
+
+构建前需要两份**不入库**的本地文件，模板已在仓库里：
+
+    cp android/key.properties.example   android/key.properties    # 填签名口令
+    cp android/local.properties.example android/local.properties  # 填本机 Android SDK 路径
+
+⚠️ 缺失 key.properties 时构建**不会中断**，会静默回落到 debug 签名 ——
+   打出来的包无法覆盖安装已发布的版本，务必确认签名生效。
+
+版本号只有一个来源：app.json 的 expo.version 与 expo.android.versionCode。
+android/app/build.gradle 已改成**现读** app.json，不再是写死的常量 ——
+构建日志里搜 versionName= 就能看到实际生效的版本。
+
+注：项目根目录含中文字符，原生编译（CMake）会必然失败，所以 build-apk.cjs 会先把工程
+增量同步到纯 ASCII 镜像目录再编译。细节见脚本头部注释。
