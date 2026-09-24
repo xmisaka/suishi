@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-生成 岁时-图标方案.html
+生成 docs/岁时-图标方案.html
 
 四版的图全部由 suishi-icons.py 现算（真素材，不是示意图），
 以 base64 内嵌 —— 单文件自包含，可以直接发给别人看。
+
+★ 输出到 docs/ 而不是仓库根：设计稿与方案页集中一处，仓库根只留工程文件。
+   搬过一次，别改回去 —— 改了根目录会重新长出一份，与 docs/ 里的分叉。
 
 用法：
     python scripts/icon-plan-page.py
@@ -18,7 +21,7 @@ import sys
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "岁时-图标方案.html")
+OUT = os.path.join(ROOT, "docs", "岁时-图标方案.html")
 
 _spec = importlib.util.spec_from_file_location(
     "si", os.path.join(ROOT, "scripts", "suishi-icons.py"))

@@ -9,12 +9,15 @@
 
 三张盘共用同一套光点数据（唯一变量 = 该方案新增的元素），
 节气角度用 lunar-javascript 实算，不是凑的。
+
+★ 输出到 docs/ 而不是仓库根：设计稿与方案页集中一处，仓库根只留工程文件。
 """
 import math
 import os
 import subprocess
 
-OUT_HTML = r"E:\WorkBuddy\纪念日\星盘-强化方案.html"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+OUT_HTML = os.path.join(ROOT, "docs", "星盘-强化方案.html")
 
 SIZE = 340.0
 C = SIZE / 2          # 170

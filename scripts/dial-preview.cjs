@@ -12,84 +12,26 @@
  *   一旦发现图与真机不符，那说明预览脚本的**装配**写错了，
  *   而不是几何 —— 这正是这个脚本值得存在的前提。
  *
+ * ★ 装配代码在 `scripts/lib/dial-svg.cjs`，与 `scripts/screens-page.cjs` 共用一份。
+ *   两个页面画的是同一张盘，各自抄一份迟早分叉。
+ *
  * 跑法（幂等）：
  *   node_modules/.bin/tsc -p scripts/tsconfig.caltest.json
  *   node scripts/dial-preview.cjs
  *
- * 产出：星盘-夜观-实现预览.html
+ * 产出：docs/星盘-夜观-实现预览.html
  */
 
 const fs = require('fs');
 const path = require('path');
 
-const ROOT = path.join(__dirname, '..');
-const OUT_HTML = path.join(ROOT, '星盘-夜观-实现预览.html');
+const { ROOT, dial, THEMES, THEME_LABEL, THEME_NOTE, escd, buildDial } = require('./lib/dial-svg.cjs');
 
-const CALTEST = path.join(ROOT, '.workbuddy', 'tmp', 'caltest');
-
-/* ------------------------------------------------------------ 依赖 */
-
-function need(p, hint) {
-  if (!fs.existsSync(p)) {
-    console.error(`缺少编译产物：${p}\n先跑：${hint}`);
-    process.exit(1);
-  }
-  return require(p);
-}
-
-const dial = need(path.join(CALTEST, 'dial.js'), 'node_modules/.bin/tsc -p scripts/tsconfig.caltest.json');
-const { nextSolarTerms } = need(
-  path.join(CALTEST, 'calendar', 'lunar.js'),
-  'node_modules/.bin/tsc -p scripts/tsconfig.caltest.json',
-);
-
-/* ------------------------------------------------------------ 令牌（读源码） */
-
-/**
- * 直接正则解析 theme.ts，而不是编译它 —— 那个文件 import 了 react-native，
- * 为了拿几个色值把 RN 的类型体系拖进一个 node 脚本不值当。
- *
- * 代价是解析器对格式敏感。所以下面有一道自检：四套主题都必须解出
- * 三个 dialBed，缺一个就当场报错退出，绝不静默出一张颜色不对的图。
- */
-function readThemes() {
-  const src = fs.readFileSync(path.join(ROOT, 'src', 'constants', 'theme.ts'), 'utf8');
-  const out = {};
-  const block = /^ {2}(xuanye|cangqing|moyu|sujian):\s*\{([\s\S]*?)\n {2}\},/gm;
-
-  let m;
-  while ((m = block.exec(src))) {
-    const tokens = {};
-    const pair = /(\w+):\s*'([^']+)'/g;
-    let p;
-    while ((p = pair.exec(m[2]))) tokens[p[1]] = p[2];
-    out[m[1]] = tokens;
-  }
-
-  const required = ['paper', 'ink', 'ink2', 'ink3', 'brand', 'dialBed1', 'dialBed2', 'dialBed3', 'sage', 'amber', 'clay'];
-  for (const key of ['xuanye', 'cangqing', 'moyu', 'sujian']) {
-    if (!out[key]) throw new Error(`theme.ts 里没解析出主题「${key}」，正则与源码格式脱节了`);
-    for (const t of required) {
-      if (!out[key][t]) throw new Error(`主题「${key}」缺令牌 ${t}`);
-    }
-  }
-  return out;
-}
-
-const THEMES = readThemes();
-const THEME_LABEL = { xuanye: '玄夜', cangqing: '苍青', moyu: '墨玉', sujian: '素笺' };
-const THEME_NOTE = {
-  xuanye: '墨底暖金（默认）',
-  cangqing: '墨蓝月白',
-  moyu: '墨绿玉色',
-  sujian: '暖米白 —— 唯一需要单独确认的一套',
-};
+const OUT_HTML = path.join(ROOT, 'docs', '星盘-夜观-实现预览.html');
 
 /* ------------------------------------------------------------ 夹具 */
 
 const SIZE = 340;
-const C = SIZE / 2;
-const RING = C - 24;
 const HORIZON = 366;
 
 /** 今天 = 2026 秋分。选它是因为「今天恰好落在一道分至刻上」是最难看的边界 */
@@ -114,178 +56,34 @@ const ITEMS = [
 ];
 const FOCUS_I = 2;
 
-const degOf = (days) => (days / HORIZON) * 360;
+/** 同一组夹具跑一遍，把几何结果一次性取出（表里要用，图上也要用） */
+const BASE = buildDial({
+  t: THEMES.xuanye,
+  size: SIZE,
+  today: TODAY,
+  items: ITEMS,
+  focusIndex: FOCUS_I,
+  horizonDays: HORIZON,
+  layer: 'both',
+});
 
-/** 与 lib/tone.ts 的 dialBrightness 同源。5 行，不值得为它把 RN 拖进来 */
-function brightness(days) {
-  if (days < 0) return 0.35;
-  if (days <= 7) return 1;
-  if (days <= 30) return 0.85;
-  if (days <= 120) return 0.6;
-  return 0.42;
-}
+const BANDS = BASE.bands;
+const STARS = BASE.stars;
+const TERMS = BASE.terms;
+const FOCUS_DEG = BASE.focusDeg;
+const MONTH_MARKS = BASE.marks;
 
-/*
- * 月首角度与光带分段**不再复刻** —— 直接调 lib/dial.ts 的 monthTicks()。
- *
- * 这一段以前是本文件自己算的（还顺手另写了一次日期差），与组件同源只靠一句
- * 注释撑着：组件哪天改了算法，这张图会安静地画成另一个样子 ——
- * 而「图与真机不符」恰恰是这张图最不能犯的错。已收进 dial.ts。
- */
-const MONTH_TICKS = dial.monthTicks(TODAY, HORIZON);
-const BANDS = dial.bandSegments(MONTH_TICKS);
-const STARS = dial.makeStars(RING, SIZE);
-const TERMS = nextSolarTerms(TODAY, HORIZON).map((t) => ({
-  name: t.name,
-  days: t.days,
-  deg: degOf(t.days),
-}));
-const FOCUS_DEG = degOf(ITEMS[FOCUS_I].days);
-
-/* ------------------------------------------------------------ 画 */
-
-const n = (v) => Number(v).toFixed(2);
-const escd = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-
-/** 静止层：盘面纵深 + 星野。**永远不转** */
-function stillLayer(t) {
-  const s = [];
-  for (let i = 0; i < 3; i += 1) {
-    const r = dial.BED_RATIOS[i] * RING;
-    s.push(`<circle cx="${C}" cy="${C}" r="${n(r)}" fill="${t['dialBed' + (i + 1)]}"/>`);
-  }
-  for (const st of STARS) {
-    s.push(
-      `<circle cx="${n(st.x)}" cy="${n(st.y)}" r="${n(st.r)}" fill="${t.ink}" opacity="${st.o.toFixed(3)}"/>`,
-    );
-  }
-  return s.join('\n');
-}
-
-/**
- * 月轮：十二个月号。与组件同源 —— 就是 dial.monthMarks(BANDS, TODAY.m)。
- *
- * `rot` 是这一层在屏幕上被转过的角度。数字的**位置**随盘走（角度 + rot），
- * **字面**用 rotate(-rot) 绕自身中心转回来 —— 这正是组件里 MonthLabel 的反向自转。
- * 合成图里 rot = −焦点角度，于是数字既跟着盘走、又永远正立。
- *
- * `y + 4` 是 SVG 的基线修正：text 的 y 指基线，11.5px 的字要下沉约 4px 才是视觉居中。
- */
-function monthLabels(t, rot) {
-  return dial
-    .monthMarks(BANDS, TODAY.m)
-    .map((m) => {
-      const p = dial.polar(C, C, RING - dial.MONTH_LABEL_INSET, m.deg);
-      return (
-        `<text x="${n(p.x)}" y="${n(p.y + 4)}" text-anchor="middle" font-size="11.5" ` +
-        `font-weight="500" fill="${t.ink2}" opacity="${m.opacity.toFixed(3)}" ` +
-        `font-family="${SANS}" font-variant-numeric="tabular-nums" ` +
-        `transform="rotate(${n(-rot)} ${n(p.x)} ${n(p.y)})">${m.label}</text>`
-      );
-    })
-    .join('\n');
-}
-
-/** 旋转层：光带、月轮、刻度、金弧、光点、焦点。整层绕圆心转 `rot` = 焦点停在指针下 */
-function spinLayer(t, rot) {
-  const s = [];
-
-  // 时间光带：外环本身就是分段弧，越远越暗
-  BANDS.forEach((b, i) => {
-    s.push(
-      `<path d="${dial.arcPath(C, C, RING, b.from, b.to)}" fill="none" stroke="${t.brand}" ` +
-        `stroke-width="2.4" stroke-linecap="round" opacity="${b.opacity}"/>`,
-    );
-  });
-
-  // 分至点刻
-  for (const term of TERMS) {
-    s.push(
-      `<path d="${dial.tickPath(C, C, RING, RING - 13, term.deg)}" stroke="${t.brand}" ` +
-        `stroke-width="1.2" opacity="0.55"/>`,
-    );
-  }
-
-  // 今天那道刻（0°）
-  const tip = dial.polar(C, C, RING + 7, 0);
-  s.push(
-    `<path d="${dial.tickPath(C, C, RING + 4, RING - 11, 0)}" stroke="${t.brand}" ` +
-      `stroke-width="1.5" stroke-linecap="round"/>`,
-    `<circle cx="${n(tip.x)}" cy="${n(tip.y)}" r="2.2" fill="${t.brand}"/>`,
-  );
-
-  // 金弧：今天 → 焦点
-  const arcLen = RING * Math.abs(FOCUS_DEG) * (Math.PI / 180);
-  s.push(
-    `<path d="${dial.arcPath(C, C, RING, 0, FOCUS_DEG)}" fill="none" stroke="${t.brand}" ` +
-      `stroke-width="2.5" stroke-linecap="round" stroke-dasharray="${n(arcLen)} ${n(arcLen)}"/>`,
-  );
-
-  // 光点：辉光在下，本体在上
-  for (const it of ITEMS) {
-    const p = dial.polar(C, C, RING, degOf(it.days));
-    const r = it.pinned ? 5 : 3.4;
-    const op = brightness(it.days);
-    const halo = dial.HALO_MIN + (dial.HALO_MAX - dial.HALO_MIN) * op;
-    s.push(
-      `<circle cx="${n(p.x)}" cy="${n(p.y)}" r="${n(r * dial.HALO_SCALE)}" fill="${t[it.tone]}" opacity="${halo.toFixed(3)}"/>`,
-      `<circle cx="${n(p.x)}" cy="${n(p.y)}" r="${r}" fill="${t[it.tone]}" opacity="${op}"/>`,
-    );
-  }
-
-  // 焦点：双环定形 + 最外一环呼吸（静态图取呼吸的中点）
-  const fp = dial.polar(C, C, RING, FOCUS_DEG);
-  const breathMid = dial.BREATH_MIN + dial.BREATH_RANGE * 0.5;
-  s.push(
-    `<circle cx="${n(fp.x)}" cy="${n(fp.y)}" r="10" fill="none" stroke="${t.brand}" stroke-width="1.4" opacity="0.9"/>`,
-    `<circle cx="${n(fp.x)}" cy="${n(fp.y)}" r="16" fill="none" stroke="${t.brand}" stroke-width="1" opacity="0.26"/>`,
-    `<circle cx="${n(fp.x)}" cy="${n(fp.y)}" r="22" fill="none" stroke="${t.brand}" stroke-width="0.8" opacity="${breathMid.toFixed(3)}"/>`,
-  );
-
-  // 月轮**最后画**：组件里它是一层压在 Svg 之上的 View，
-  // 而焦点最外那环（r=22）径向够到 r≈124，正好擦过数字带 —— 顺序要跟组件一致
-  s.push(monthLabels(t, rot));
-
-  return s.join('\n');
-}
-
-/** 圆心：不随盘转，永远正面朝上。这里手排 5 行，对应组件的 flex 顺序 */
-function core(t) {
-  const rows = [
-    `<text x="${C}" y="132" text-anchor="middle" font-size="17" fill="${t.ink}" font-family="${SANS}">结婚纪念日</text>`,
-    `<text x="${C}" y="178" text-anchor="middle" font-size="46" font-weight="500" fill="${t.brand}" font-family="${SANS}">12</text>`,
-    `<text x="${C + 40}" y="167" text-anchor="start" font-size="13" fill="${t.ink2}" font-family="${SANS}">天后</text>`,
-    `<text x="${C}" y="204" text-anchor="middle" font-size="13" fill="${t.ink3}" font-family="${SANS}">2026 年 10 月 5 日 · 星期一</text>`,
-    `<text x="${C}" y="221" text-anchor="middle" font-size="11.5" letter-spacing="0.6" fill="${t.ink3}" font-family="${SANS}">农历八月廿五</text>`,
-    `<text x="${C}" y="236" text-anchor="middle" font-size="11.5" font-weight="600" fill="${t.brand}" font-family="${SANS}">第 3 周年</text>`,
-  ];
-  return rows.join('\n');
-}
-
-const SANS = "-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif";
-
-/** 指针：固定在 12 点，**不随盘转**。尺寸与 SkyDial 的 styles.pointer 对齐（宽 10、高 7、top 2） */
-function pointer(t) {
-  return `<path d="M ${C - 5} 2 L ${C + 5} 2 L ${C} 9 Z" fill="${t.brand}"/>`;
-}
-
-function svgBody(t, layer) {
-  const parts = [];
-  if (layer !== 'spin') parts.push(stillLayer(t));
-  if (layer === 'still') return `<svg viewBox="0 0 ${SIZE} ${SIZE}" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
-
-  // 旋转层整层绕圆心转，焦点停在 12 点 —— 与组件 rotation 的终态等价。
-  // 单看旋转层时不转（rot = 0），月轮的数字因此仍以盘坐标摆着，便于核对角度。
-  const rot = layer === 'spin' ? 0 : -FOCUS_DEG;
-  const spin = spinLayer(t, rot);
-  if (layer === 'spin') {
-    parts.push(spin);
-  } else {
-    parts.push(`<g transform="rotate(${n(rot)} ${C} ${C})">${spin}</g>`);
-  }
-  if (layer === 'both') parts.push(core(t), pointer(t));
-  return `<svg viewBox="0 0 ${SIZE} ${SIZE}" width="100%" role="img" xmlns="http://www.w3.org/2000/svg">${parts.join('')}</svg>`;
-}
+const drawDial = (themeKey, layer, withCore = true) =>
+  buildDial({
+    t: THEMES[themeKey],
+    size: SIZE,
+    today: TODAY,
+    items: ITEMS,
+    focusIndex: FOCUS_I,
+    horizonDays: HORIZON,
+    layer,
+    withCore,
+  }).svg;
 
 /* ------------------------------------------------------------ 特写模式 */
 
@@ -307,7 +105,7 @@ if (plateArg >= 0) {
   html,body{margin:0;height:100%;background:${t.paper};display:flex;align-items:center;justify-content:center}
   .plate{width:900px;height:900px}
   .plate svg{display:block;width:100%;height:auto}
-</style></head><body><div class="plate">${svgBody(t, 'both')}</div></body></html>`;
+</style></head><body><div class="plate">${drawDial(key, 'both')}</div></body></html>`;
   const platePath = path.join(ROOT, '.workbuddy', 'tmp', `plate-${key}.html`);
   fs.writeFileSync(platePath, plate, 'utf8');
   console.log(platePath);
@@ -320,14 +118,13 @@ const dialCard = (key, layer, note) => {
   const t = THEMES[key];
   return `
 <figure class="dial">
-  <div class="screen" style="background:${t.paper}">${svgBody(t, layer)}</div>
+  <div class="screen" style="background:${t.paper}">${drawDial(key, layer)}</div>
   <figcaption>${note}</figcaption>
 </figure>`;
 };
 
 const BAND_LIST = dial.BAND_OPS.map((v) => v.toFixed(2)).join(' → ');
 const MONTH_LIST = dial.MONTH_LABEL_OPS.map((v) => v.toFixed(2)).join(' → ');
-const MONTH_MARKS = dial.monthMarks(BANDS, TODAY.m);
 const STAR_PREVIEW = STARS.slice(0, 3)
   .map((s) => `(${s.x.toFixed(1)}, ${s.y.toFixed(1)}) r=${s.r.toFixed(2)} o=${s.o.toFixed(3)}`)
   .join(' ｜ ');
@@ -452,6 +249,7 @@ ${dialCard('xuanye', 'both', '<p class="tname">合成</p>旋转层已转到焦�
 <footer>
 几何与视觉参数：<code>src/lib/dial.ts</code>　｜　组件：<code>src/components/domain/SkyDial.tsx</code><br>
 分至点：<code>src/lib/calendar/lunar.ts · nextSolarTerms()</code>　｜　令牌：<code>src/constants/theme.ts</code><br>
+装配：<code>scripts/lib/dial-svg.cjs</code>（与 README 截图页共用一份）<br>
 重新生成：<code>node_modules/.bin/tsc -p scripts/tsconfig.caltest.json &amp;&amp; node scripts/dial-preview.cjs</code>
 </footer>
 

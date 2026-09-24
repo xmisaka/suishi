@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>岁时 · 界面（与 v1.2.0 实现逐屏核对）</title>
+<style>
+  :root{--paper:#F7F4EF;--canvas:#FBF9F6;--surface:#FFFFFF;--surface2:#FDFCFA;--inset:#F2EDE5;--ink:#2B241F;--ink2:#6B6055;--ink3:#9A8D80;--ink4:#C9BEB0;--line:#E3DCD1;--line2:#EBE5DB;--line3:#F1ECE4;--brand:#8C5A34;--brand-deep:#6B4224;--brand-bg:#F3E9DE;--sage:#5F7355;--sage-bg:#EDF1E9;--amber:#926521;--amber-bg:#FBF1DF;--clay:#AA523D;--clay-bg:#F9EAE5;--on-accent:#FFFFFF;--pure:#FFFFFF;--scrim:rgba(43,36,31,0.32);
+    --serif:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",SimSun,serif;--sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#F7F4EF;color:#2B241F;font-family:var(--serif);
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:64px 32px 100px}
+  header{border-bottom:1px solid #E3DCD1;padding-bottom:32px;margin-bottom:8px}
+  .eyebrow{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+    color:#9A8D80;margin:0 0 16px}
+  h1{font-size:32px;line-height:1.5;font-weight:400;margin:0 0 18px}
+  h1 b{font-weight:400;color:#8C5A34}
+  .lede{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:14px;line-height:1.95;color:#6B6055;margin:0;max-width:74ch}
+  .lede code{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:12.5px;background:#F3E9DE;color:#6B4224;
+    padding:1px 6px;border-radius:5px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(412px,1fr));
+    gap:56px 40px;justify-items:center;margin-top:52px}
+  figure.fig{margin:0;display:flex;flex-direction:column;align-items:center}
+  .shot{border-radius:32px;overflow:hidden;
+    box-shadow:0 2px 4px rgba(43,36,31,.08),0 24px 48px -20px rgba(43,36,31,.34)}
+  figcaption{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:12.5px;line-height:1.85;color:#6B6055;
+    margin-top:16px;max-width:412px}
+  figcaption b{display:block;font-size:13.5px;color:#2B241F;margin-bottom:3px}
+  footer{border-top:1px solid #E3DCD1;margin-top:72px;padding-top:24px;
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-size:12.5px;line-height:1.9;color:#9A8D80}
+
+  /* ---- 手机框 ---- */
+  .ph{position:relative;width:412px;height:915px;overflow:hidden;
+    background:var(--canvas);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    font-size:14px;line-height:22px;display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased}
+  .safe{padding-top:26px;display:flex;flex-direction:column;min-height:0;flex:1}
+  .scroll{flex:1;min-height:0;overflow:hidden}
+
+  /* ---- 页头 ---- */
+  .hdr{padding:12px 17px 10px}
+  .hdr-row{display:flex;align-items:flex-start;gap:12px}
+  .display{font-family:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",SimSun,serif;font-size:23px;line-height:32px;letter-spacing:2px;color:var(--ink);flex:1}
+  .hdr-sub{margin-top:4px;font-size:13px;line-height:19px;color:var(--ink3)}
+
+  /* ---- 通用排版 ---- */
+  .meta{font-size:13px;line-height:19px}
+  .body{font-size:14px;line-height:22px}
+  .label{font-size:11.5px;line-height:16px}
+  .item{font-size:16px;line-height:22px;font-weight:500}
+  .title{font-family:"Songti SC","Source Han Serif SC","Noto Serif CJK SC",SimSun,serif;font-size:20px;line-height:28px;letter-spacing:.5px}
+  .ink{color:var(--ink)} .ink2{color:var(--ink2)} .ink3{color:var(--ink3)} .ink4{color:var(--ink4)}
+  .brand{color:var(--brand)} .clay{color:var(--clay)} .sage{color:var(--sage)} .amber{color:var(--amber)}
+  .tnum{font-variant-numeric:tabular-nums}
+
+  /* ---- 卡片 ---- */
+  .card{background:var(--surface);border:1px solid var(--line2);border-radius:14px;overflow:hidden}
+  .card-pad{padding:16px}
+  .gutter{padding:0 17px}
+  .section{margin-top:22px}
+  .sec-head{display:flex;align-items:center;justify-content:space-between;
+    padding:0 17px 8px}
+  /* 列表分段头：源码里 sectionHead 是 paddingTop Space.xxl */
+  .list-head{padding-top:20px}
+  .sec-title{font-size:12.5px;line-height:16px;letter-spacing:.6px;color:var(--ink2)}
+  .sec-link{font-size:12px;line-height:16px;font-weight:600;color:var(--brand)}
+
+  /* ---- 条目行 ---- */
+  .row{display:flex;align-items:center;gap:12px;padding:11px 17px}
+  .row-sep{border-bottom:1px solid var(--line3)}
+  .stripe{width:3px;height:30px;border-radius:2px;opacity:.9;flex:none}
+  .row-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+  .row-name{display:flex;align-items:center;gap:4px;min-width:0}
+  .row-name .item{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .star{color:var(--brand);font-size:11px;line-height:1}
+  .row-sub{font-size:12.5px;line-height:17px;color:var(--ink3);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis}
+  .row-right{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
+  .count-line{display:flex;align-items:baseline;gap:2px}
+  .count-num{font-size:19px;line-height:26px;font-weight:600;font-variant-numeric:tabular-nums}
+  .count-unit{font-size:11px;line-height:16px;color:var(--ink3)}
+  .today-text{font-size:15px;line-height:22px;font-weight:700;color:var(--brand)}
+  .ordinal{font-size:10.5px;line-height:15px;color:var(--ink4)}
+
+  /* ---- 计数条 ---- */
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:12px 17px 0}
+  .pill{padding:3px 10px;border-radius:999px;font-size:12px;line-height:16px;font-weight:600}
+  .pill.today{background:var(--brand-bg);color:var(--brand)}
+  .pill.soon{background:var(--amber-bg);color:var(--amber)}
+  .pill.future{background:var(--sage-bg);color:var(--sage)}
+  .pill.past{background:var(--inset);color:var(--ink3)}
+
+  /* ---- 搜索框 ---- */
+  .search{display:flex;align-items:center;gap:8px;height:38px;
+    margin:12px 17px 0;padding:0 12px;
+    background:var(--inset);border-radius:11px;color:var(--ink3)}
+  .search span{font-size:14px;color:var(--ink4)}
+
+  /* ---- chip ---- */
+  .chips{display:flex;gap:8px;padding:12px 17px 0;flex-wrap:wrap}
+  .chip{padding:6px 12px;border-radius:999px;border:1px solid var(--line);
+    background:var(--surface);font-size:12.5px;line-height:17px;color:var(--ink2)}
+  .chip.on{background:var(--brand);border-color:var(--brand);color:var(--on-accent);font-weight:600}
+
+  /* ---- 指标条（裸壳） ---- */
+  .strip{display:flex}
+  .strip-cell{flex:1;padding:12px 8px;display:flex;flex-direction:column;
+    align-items:center;gap:2px}
+  .strip-cell + .strip-cell{border-left:1px solid var(--line2)}
+  .strip-val{font-size:17px;line-height:22px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .strip-lab{font-size:11.5px;line-height:16px;color:var(--ink3)}
+
+  /* ---- 设置行 ---- */
+  .set-row{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:46px;padding:8px 16px}
+  .set-row + .set-row{border-top:1px solid var(--line3)}
+  /* 右值语气：默认 brand（有引导意味），.ink3 = 陈述事实。
+     写成 .set-val.ink3 两类的选择器 —— 单靠 .ink3 会被 .set-val 的 color 盖掉。 */
+  .set-val{font-weight:500;text-align:right;flex:none;color:var(--brand)}
+  .set-val.ink3{color:var(--ink3)}
+  .chev{color:var(--brand);font-size:13px;line-height:1}
+
+  /* ---- 详情页 ---- */
+  .topbar{display:flex;align-items:center;gap:4px;padding:8px 12px}
+  .icon-btn{padding:4px;font-size:18px;line-height:1;color:var(--ink)}
+  .spacer{flex:1}
+  .hero{display:flex;flex-direction:column;align-items:center;
+    padding:12px 0 22px;gap:4px}
+  .hero-count{display:flex;align-items:baseline;gap:4px}
+  .hero-num{font-size:62px;line-height:68px;font-weight:500;letter-spacing:-1.2px;
+    font-variant-numeric:tabular-nums}
+  .hero-unit{font-size:17px;line-height:22px;font-weight:600}
+  .hero-name{margin-top:8px;text-align:center}
+  .hero-ord{font-size:12px;line-height:16px;font-weight:600;color:var(--brand)}
+  .info-row{display:flex;align-items:flex-start;gap:12px;
+    padding:12px 16px;min-height:44px}
+  .info-row + .info-row{border-top:1px solid var(--line3)}
+  .info-lab{width:52px;padding-top:2px;flex:none;color:var(--ink3)}
+  .info-val{flex:1;color:var(--ink)}
+  .mark-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px}
+  .mark-row + .mark-row{border-top:1px solid var(--line3)}
+  .mark-left{display:flex;align-items:center;gap:8px}
+  .mark-dot{width:14px;height:14px;border-radius:7px}
+  .tag{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:6px;
+    font-size:11px;line-height:15px;align-self:flex-start}
+  .tag-brand{background:var(--brand-bg);color:var(--brand)}
+
+  /* ---- 按钮 ---- */
+  .btn{height:44px;border-radius:12px;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    font-size:15px;font-weight:600;background:var(--surface);color:var(--ink)}
+  .btn-lg{height:52px}
+  .btn-primary{background:var(--brand);border-color:var(--brand);color:var(--on-accent)}
+  .btn-danger{color:var(--clay)}
+  .btn-col{display:flex;flex-direction:column;gap:12px;margin-top:22px;padding:0 17px}
+
+  /* ---- 表单 ---- */
+  .form-row{display:flex;align-items:center;min-height:48px;padding:8px 0;
+    border-bottom:1px solid var(--line3)}
+  .form-row.last{border-bottom:0}
+  .form-lab{width:84px;flex:none;color:var(--ink2)}
+  .form-content{flex:1;display:flex;justify-content:flex-end;align-items:center}
+  .form-input{color:var(--ink4)}
+  .seg{display:flex;background:var(--inset);border-radius:11px;padding:2px;gap:2px}
+  .seg span{padding:5px 12px;border-radius:7px;font-size:12.5px;line-height:17px;
+    font-weight:500;color:var(--ink3)}
+  .seg span.on{background:var(--surface);color:var(--ink)}
+  .date-row{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+  .tone-row{display:flex;justify-content:space-between}
+  .tone-cell{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .tone-dot{width:38px;height:38px;border-radius:19px;display:flex;align-items:center;
+    justify-content:center;color:var(--on-accent);font-size:14px;line-height:1;
+    border:2px solid transparent}
+  /* 选中环走真边框而不是 box-shadow：RN 里是 borderWidth:2，
+     边框吃在 38px 之内；用外阴影会连直径一起放大 4px */
+  .tone-dot.on{border-color:var(--ink)}
+  .tone-lab{font-size:11.5px;line-height:16px;color:var(--ink3)}
+  .tone-lab.on{color:var(--brand)}
+  .divider{height:1px;background:var(--line3);margin:16px 0}
+  .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .switch-txt{flex:1;display:flex;flex-direction:column;gap:2px}
+  .knob{width:44px;height:24px;border-radius:12px;background:var(--brand);flex:none;
+    display:flex;align-items:center;justify-content:flex-end;padding:2px}
+  .knob i{width:20px;height:20px;border-radius:10px;background:var(--pure);display:block}
+  .note-box{min-height:68px;color:var(--ink4)}
+
+  /* ---- 标签栏 ---- *
+   * 在流内（不是 absolute）：RN 里 TabBar 是 ScrollView 的兄弟节点，
+   * 内容在标签栏上沿被裁掉，而不是从它下面穿过去。 */
+  .tabbar{display:flex;flex:none;
+    background:var(--surface);border-top:1px solid var(--line2);padding-top:8px;
+    padding-bottom:8px}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:2px 0;
+    font-size:10.5px;line-height:15px;color:var(--ink3)}
+  .tab.on{color:var(--brand)}
+  .tab-ico{font-size:19px;line-height:1}
+  .tab-plus{width:48px;height:48px;border-radius:999px;background:var(--brand);
+    color:var(--on-accent);display:flex;align-items:center;justify-content:center;
+    font-size:26px;line-height:1;margin-top:-14px;
+    box-shadow:0 6px 14px -6px var(--brand)}
+
+  /* ---- 面板 ---- */
+  .scrim{position:absolute;inset:0;background:var(--scrim)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--surface);
+    border-top-left-radius:20px;border-top-right-radius:20px;
+    border-top:1px solid var(--line2);overflow:hidden;
+    padding-bottom:16px}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 17px 12px;border-bottom:1px solid var(--line3)}
+  .sheet-head .title{font-size:18px}
+  .sheet-close{color:var(--ink2);font-size:18px;line-height:1}
+  .sheet-body{padding:12px 17px 12px}
+  .theme-row{display:flex;align-items:center;gap:12px;padding:12px;
+    border-radius:14px;border:1px solid var(--line3);margin-bottom:8px}
+  .theme-row.on{border-color:var(--brand);background:var(--brand-bg)}
+  .swatch{display:flex;width:54px;height:38px;border-radius:9px;overflow:hidden;
+    border:1px solid var(--line);flex:none}
+  .theme-main{flex:1;display:flex;flex-direction:column;gap:2px}
+  .theme-name{font-weight:600}
+  .theme-note{font-size:11.5px;line-height:16px;color:var(--ink3)}
+  .sheet-hint{margin-top:16px;font-size:11.5px;line-height:18px;color:var(--ink3)}
+  .sheet-done{margin-top:16px}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">岁时 v1.2.0 · 界面</p>
+    <h1>六屏<br><b>照源码重建，不是设计稿</b></h1>
+    <p class="lede">
+      这里的每一屏都是从 <code>src/</code> 的源码逐条重建的：界面文案照抄各屏组件，色值经
+      <code>theme.ts</code> 解析，字号 / 间距 / 圆角照 <code>Type</code> / <code>Space</code> / <code>Radius</code> 的真值写。
+      盘面 SVG 走 <code>scripts/lib/dial-svg.cjs</code>，与<code>docs/星盘-夜观-实现预览.html</code> 共用同一份装配代码；
+      样本条目先按真实规则定义，再交给 <code>src/lib/calendar/resolve.js</code> 算出落点与天数。
+      —— 也就是说，图上的「12 天后」「农历八月廿五」都是算出来的，不是写的。
+    </p>
+  </header>
+  <div class="grid">
+
+<figure class="fig" data-slug="dial">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      <div class="safe">
+        <div class="scroll">
+          <div class="hdr">
+            <div class="hdr-row"><div class="display">岁时</div></div>
+            <div class="hdr-sub">农历八月十三 · 丙午年</div>
+          </div>
+
+          
+      <div style="display:flex;justify-content:center;padding-top:0px">
+        <div style="position:relative;width:340px;height:340px">
+          <svg viewBox="0 0 340 340" width="100%" role="img" xmlns="http://www.w3.org/2000/svg"><circle cx="170" cy="170" r="146.00" fill="#131109"/>
+<circle cx="170" cy="170" r="111.98" fill="#171410"/>
+<circle cx="170" cy="170" r="74.02" fill="#1A1711"/>
+<circle cx="165.85" cy="76.76" r="1.00" fill="#F2EBDF" opacity="0.153"/>
+<circle cx="202.63" cy="72.85" r="0.99" fill="#F2EBDF" opacity="0.116"/>
+<circle cx="194.33" cy="108.12" r="1.01" fill="#F2EBDF" opacity="0.158"/>
+<circle cx="205.99" cy="134.51" r="1.13" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="250.75" cy="121.46" r="1.18" fill="#F2EBDF" opacity="0.128"/>
+<circle cx="230.73" cy="144.83" r="0.78" fill="#F2EBDF" opacity="0.123"/>
+<circle cx="252.50" cy="159.49" r="0.97" fill="#F2EBDF" opacity="0.111"/>
+<circle cx="278.67" cy="190.96" r="0.72" fill="#F2EBDF" opacity="0.176"/>
+<circle cx="221.38" cy="186.65" r="0.86" fill="#F2EBDF" opacity="0.177"/>
+<circle cx="245.74" cy="217.23" r="0.79" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="242.91" cy="264.68" r="0.99" fill="#F2EBDF" opacity="0.160"/>
+<circle cx="201.36" cy="222.69" r="0.98" fill="#F2EBDF" opacity="0.108"/>
+<circle cx="190.20" cy="252.97" r="0.90" fill="#F2EBDF" opacity="0.074"/>
+<circle cx="173.34" cy="252.22" r="1.06" fill="#F2EBDF" opacity="0.081"/>
+<circle cx="153.00" cy="251.46" r="1.03" fill="#F2EBDF" opacity="0.110"/>
+<circle cx="112.08" cy="257.54" r="1.10" fill="#F2EBDF" opacity="0.060"/>
+<circle cx="102.47" cy="247.59" r="1.10" fill="#F2EBDF" opacity="0.139"/>
+<circle cx="100.52" cy="225.71" r="1.10" fill="#F2EBDF" opacity="0.070"/>
+<circle cx="109.11" cy="191.58" r="0.87" fill="#F2EBDF" opacity="0.161"/>
+<circle cx="70.46" cy="185.49" r="0.75" fill="#F2EBDF" opacity="0.154"/>
+<circle cx="114.50" cy="163.25" r="1.06" fill="#F2EBDF" opacity="0.134"/>
+<circle cx="100.56" cy="147.51" r="0.94" fill="#F2EBDF" opacity="0.113"/>
+<circle cx="124.98" cy="131.56" r="0.79" fill="#F2EBDF" opacity="0.064"/>
+<circle cx="107.16" cy="81.44" r="0.97" fill="#F2EBDF" opacity="0.063"/>
+<circle cx="138.31" cy="100.20" r="0.72" fill="#F2EBDF" opacity="0.078"/>
+<circle cx="153.03" cy="76.01" r="1.06" fill="#F2EBDF" opacity="0.144"/><g transform="rotate(-11.80 170 170)"><path d="M 170 24 A 146 146 0 0 1 189.98828445682742 25.374730823161656" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.49038251366120217"/>
+<path d="M 189.98828445682742 25.374730823161656 A 146 146 0 0 1 260.6089843468037 55.51850823980028" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.44349726775956283"/>
+<path d="M 260.6089843468037 55.51850823980028 A 146 146 0 0 1 305.24329936471827 114.99772752926299" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3701639344262295"/>
+<path d="M 305.24329936471827 114.99772752926299 A 146 146 0 0 1 314.4483723008737 191.22893637533875" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.3022267759562841"/>
+<path d="M 314.4483723008737 191.22893637533875 A 146 146 0 0 1 283.69953390187504 261.5882961436469" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.2417213114754098"/>
+<path d="M 283.69953390187504 261.5882961436469 A 146 146 0 0 1 228.46627022508497 303.7822680551027" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.192103825136612"/>
+<path d="M 228.46627022508497 303.7822680551027 A 146 146 0 0 1 152.4973459243128 314.9470837937308" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.15021857923497264"/>
+<path d="M 152.4973459243128 314.9470837937308 A 146 146 0 0 1 83.3742924009241 287.5244093070006" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.11677595628415302"/>
+<path d="M 83.3742924009241 287.5244093070006 A 146 146 0 0 1 35.720816192313805 227.31579883366913" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.0984426229508197"/>
+<path d="M 35.720816192313805 227.31579883366913 A 146 146 0 0 1 24.90802217583925 153.74214125189786" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.08010928961748633"/>
+<path d="M 24.90802217583925 153.74214125189786 A 146 146 0 0 1 53.22347026800094 82.36871503993827" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.061775956284153"/>
+<path d="M 53.22347026800094 82.36871503993827 A 146 146 0 0 1 169.99999999999997 24" fill="none" stroke="#C9985C" stroke-width="2.4" stroke-linecap="round" opacity="0.048114754098360656"/>
+<path d="M 170 24 L 170 37" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 315.9515962570897 166.24080460637165 L 302.95590617940366 166.5755274838865" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 180.01775174831158 315.6559118261569 L 179.12576015428382 302.68654981423884" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 24.26346677328175 178.76714794318247 L 37.24000740305803 177.98651148248814" stroke="#C9985C" stroke-width="1.2" opacity="0.55"/>
+<path d="M 170 20 L 170 35" stroke="#C9985C" stroke-width="1.5" stroke-linecap="round"/>
+<circle cx="170.00" cy="17.00" r="2.2" fill="#C9985C"/>
+<path d="M 170 24 A 146 146 0 0 1 199.86460165442531 27.08706997607777" fill="none" stroke="#C9985C" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="30.08 30.08"/>
+<circle cx="175.01" cy="24.09" r="13.50" fill="#D57C61" opacity="0.170"/>
+<circle cx="175.01" cy="24.09" r="5" fill="#D57C61" opacity="1"/>
+<circle cx="180.02" cy="24.34" r="9.18" fill="#D57C61" opacity="0.170"/>
+<circle cx="180.02" cy="24.34" r="3.4" fill="#D57C61" opacity="1"/>
+<circle cx="189.99" cy="25.37" r="9.18" fill="#C9985C" opacity="0.154"/>
+<circle cx="189.99" cy="25.37" r="3.4" fill="#C9985C" opacity="0.85"/>
+<circle cx="199.86" cy="27.09" r="13.50" fill="#C9985C" opacity="0.154"/>
+<circle cx="199.86" cy="27.09" r="5" fill="#C9985C" opacity="0.85"/>
+<circle cx="212.01" cy="30.17" r="9.18" fill="#8FA87C" opacity="0.154"/>
+<circle cx="212.01" cy="30.17" r="3.4" fill="#8FA87C" opacity="0.85"/>
+<circle cx="226.16" cy="35.23" r="9.18" fill="#8FA87C" opacity="0.154"/>
+<circle cx="226.16" cy="35.23" r="3.4" fill="#8FA87C" opacity="0.85"/>
+<circle cx="278.83" cy="72.68" r="9.18" fill="#D9A94E" opacity="0.126"/>
+<circle cx="278.83" cy="72.68" r="3.4" fill="#D9A94E" opacity="0.6"/>
+<circle cx="315.74" cy="161.23" r="9.18" fill="#D9A94E" opacity="0.126"/>
+<circle cx="315.74" cy="161.23" r="3.4" fill="#D9A94E" opacity="0.6"/>
+<circle cx="315.95" cy="166.24" r="9.18" fill="#8FA87C" opacity="0.126"/>
+<circle cx="315.95" cy="166.24" r="3.4" fill="#8FA87C" opacity="0.6"/>
+<circle cx="300.03" cy="236.39" r="9.18" fill="#C9985C" opacity="0.126"/>
+<circle cx="300.03" cy="236.39" r="3.4" fill="#C9985C" opacity="0.6"/>
+<circle cx="275.43" cy="271.00" r="9.18" fill="#D9A94E" opacity="0.106"/>
+<circle cx="275.43" cy="271.00" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="266.38" cy="279.67" r="9.18" fill="#D57C61" opacity="0.106"/>
+<circle cx="266.38" cy="279.67" r="3.4" fill="#D57C61" opacity="0.42"/>
+<circle cx="212.01" cy="309.83" r="9.18" fill="#D9A94E" opacity="0.106"/>
+<circle cx="212.01" cy="309.83" r="3.4" fill="#D9A94E" opacity="0.42"/>
+<circle cx="77.44" cy="57.09" r="9.18" fill="#8FA87C" opacity="0.106"/>
+<circle cx="77.44" cy="57.09" r="3.4" fill="#8FA87C" opacity="0.42"/>
+<circle cx="199.86" cy="27.09" r="10" fill="none" stroke="#C9985C" stroke-width="1.4" opacity="0.9"/>
+<circle cx="199.86" cy="27.09" r="16" fill="none" stroke="#C9985C" stroke-width="1" opacity="0.26"/>
+<circle cx="199.86" cy="27.09" r="22" fill="none" stroke="#C9985C" stroke-width="0.8" opacity="0.115"/>
+<text x="178.58" y="49.29" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.853" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 178.58 45.29)">9</text>
+<text x="219.07" y="59.03" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.818" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 219.07 55.03)">10</text>
+<text x="269.98" y="98.97" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.763" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 269.98 94.97)">11</text>
+<text x="294.10" y="159.01" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.713" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 294.10 155.01)">12</text>
+<text x="284.54" y="224.06" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.671" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 284.54 220.06)">1</text>
+<text x="245.88" y="273.33" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.636" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 245.88 269.33)">2</text>
+<text x="188.18" y="297.67" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.603" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 188.18 293.67)">3</text>
+<text x="123.90" y="290.19" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.575" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 123.90 286.19)">4</text>
+<text x="71.99" y="251.58" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.548" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 71.99 247.58)">5</text>
+<text x="46.33" y="192.18" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.520" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 46.33 188.18)">6</text>
+<text x="53.81" y="127.90" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.502" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 53.81 123.90)">7</text>
+<text x="93.28" y="75.32" text-anchor="middle" font-size="11.5" font-weight="500" fill="#B5AA99" opacity="0.483" font-family="-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif" font-variant-numeric="tabular-nums" transform="rotate(11.80 93.28 71.32)">8</text></g></svg>
+          <div style="position:absolute;top:2px;left:50%;margin-left:-5px;width:0;height:0;
+            border-left:5px solid transparent;border-right:5px solid transparent;
+            border-top:7px solid var(--brand)"></div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;
+            align-items:center;justify-content:center;gap:1px;
+            width:248px;height:248px;margin:auto">
+            <span class="item ink" style="font-size:17px">结婚纪念日</span>
+            <span style="display:flex;align-items:baseline;gap:2px">
+              <span class="tnum" style="font-size:46px;line-height:52px;font-weight:500;
+                letter-spacing:-1px;color:var(--amber)">12</span>
+              <span class="label ink3" style="font-size:13px">天后</span>
+            </span>
+            <span class="meta ink3">10月5日 周一</span>
+            <span class="label ink3" style="letter-spacing:.6px">农历八月廿五</span>
+            <span class="label brand" style="font-weight:600;margin-top:1px">第 3 周年</span>
+          </div>
+        </div>
+      </div>
+
+          <div class="legend">
+            <span class="pill today">今天 0</span><span class="pill soon">将到 6</span><span class="pill future">还早 8</span>
+          </div>
+
+          <div class="section">
+            <div class="sec-head">
+              <span class="sec-title">接下来的日子</span>
+              <span class="sec-link">全部 14 个</span>
+            </div>
+            <div class="card" style="margin:0 17px">
+              
+          <div class="row row-sep">
+            <span class="stripe" style="background:var(--clay)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="star"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span><span class="item ink">中秋节</span></div>
+              <span class="row-sub">农历八月十五 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">2</span><span class="count-unit">天后</span></span></div>
+          </div>
+          <div class="row row-sep">
+            <span class="stripe" style="background:var(--clay)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">妈妈的生日</span></div>
+              <span class="row-sub">9月27日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">4</span><span class="count-unit">天后</span></span></div>
+          </div>
+          <div class="row row-sep">
+            <span class="stripe" style="background:var(--brand)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">房租</span></div>
+              <span class="row-sub">10月1日 · 每月 1 日</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">8</span><span class="count-unit">天后</span></span></div>
+          </div>
+          <div class="row row-sep">
+            <span class="stripe" style="background:var(--brand)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="star"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span><span class="item ink">结婚纪念日</span></div>
+              <span class="row-sub">10月5日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">12</span><span class="count-unit">天后</span></span><span class="ordinal">3 周年</span></div>
+          </div>
+          <div class="row">
+            <span class="stripe" style="background:var(--sage)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">交水电费</span></div>
+              <span class="row-sub">10月10日 · 每月 10 日</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">17</span><span class="count-unit">天后</span></span></div>
+          </div>
+            </div>
+            <div class="gutter" style="margin-top:12px">
+              <div class="btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M4.5 9 12 16.5 19.5 9"/></svg>还有 9 个日子</div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:20px;font-size:11.5px;line-height:16px;color:var(--ink4)">
+            拖动圆盘可换个日子看，点盘上的光点会转到它。
+          </div>
+        </div>
+        
+    <div class="tabbar">
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="5.4"/><ellipse cx="12" cy="12" rx="10.4" ry="4.1" transform="rotate(-24 12 12)"/></svg><span>星盘</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.4" cy="6" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="18" r="1.25" fill="currentColor" stroke="none"/></svg><span>全部</span></div>
+      <div class="tab"><span class="tab-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);display:block;flex:none"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="7.6" r="4.1"/><path d="M4.6 20.6a7.4 7.4 0 0 1 14.8 0"/></svg><span>我的</span></div>
+    </div>
+      </div></div></div>
+  <figcaption><b>星盘 · 首页</b><span>把一年摊成一张盘。光点按「距今天数 ÷ 366 × 360°」落下，金弧从今天那道刻扫到焦点；拖动可换个日子看。</span></figcaption>
+</figure>
+
+<figure class="fig" data-slug="list">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      <div class="safe">
+        <div class="hdr">
+          <div class="hdr-row"><div class="display">全部</div></div>
+          <div class="hdr-sub">共 14 个日子</div>
+        </div>
+
+        <div class="search"><span style="color:var(--ink3)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="10.6" cy="10.6" r="6.4"/><path d="M15.4 15.4 21 21"/></svg></span><span>搜索名字、备注、农历日期</span></div>
+
+        <div class="chips">
+          <span class="chip on">全部</span>
+          <span class="chip">公历</span>
+          <span class="chip">农历</span>
+        </div>
+
+        <div class="scroll">
+          
+          <div class="sec-head list-head">
+            <span class="sec-title">一周之内</span>
+            <span class="meta ink4">2</span>
+          </div>
+          <div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--clay)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="star"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span><span class="item ink">中秋节</span></div>
+              <span class="row-sub">农历八月十五 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">2</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--clay)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">妈妈的生日</span></div>
+              <span class="row-sub">9月27日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">4</span><span class="count-unit">天后</span></span></div>
+          </div></div>
+          <div class="sec-head list-head">
+            <span class="sec-title">一个月内</span>
+            <span class="meta ink4">4</span>
+          </div>
+          <div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--brand)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">房租</span></div>
+              <span class="row-sub">10月1日 · 每月 1 日</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">8</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--brand)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="star"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span><span class="item ink">结婚纪念日</span></div>
+              <span class="row-sub">10月5日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">12</span><span class="count-unit">天后</span></span><span class="ordinal">3 周年</span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--sage)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">交水电费</span></div>
+              <span class="row-sub">10月10日 · 每月 10 日</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">17</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--sage)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">体检预约</span></div>
+              <span class="row-sub">10月16日 · 仅此一次</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--amber)">23</span><span class="count-unit">天后</span></span></div>
+          </div></div>
+          <div class="sec-head list-head">
+            <span class="sec-title">三个月内</span>
+            <span class="meta ink4">3</span>
+          </div>
+          <div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--amber)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">结婚登记日</span></div>
+              <span class="row-sub">11月11日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">49</span><span class="count-unit">天后</span></span><span class="ordinal">7 周年</span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--amber)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">公司年会</span></div>
+              <span class="row-sub">12月20日 · 仅此一次</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">88</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--sage)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">冬至</span></div>
+              <span class="row-sub">12月22日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">90</span><span class="count-unit">天后</span></span></div>
+          </div></div>
+          <div class="sec-head list-head">
+            <span class="sec-title">一年之内</span>
+            <span class="meta ink4">5</span>
+          </div>
+          <div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--brand)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">项目上线</span></div>
+              <span class="row-sub">1月20日 · 仅此一次</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">119</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--amber)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">春节</span></div>
+              <span class="row-sub">农历正月初一 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">136</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--clay)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">爸爸的生日</span></div>
+              <span class="row-sub">农历正月初六 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">141</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--amber)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">驾照到期</span></div>
+              <span class="row-sub">3月8日 · 仅此一次</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">166</span><span class="count-unit">天后</span></span></div>
+          </div></div><div class="card" style="margin:0 17px 8px;border-color:var(--line3)">
+          <div class="row">
+            <span class="stripe" style="background:var(--sage)"></span>
+            <div class="row-main">
+              <div class="row-name"><span class="item ink">搬进这个家</span></div>
+              <span class="row-sub">8月15日 · 每年</span>
+            </div>
+            <div class="row-right"><span class="count-line"><span class="count-num" style="color:var(--sage)">326</span><span class="count-unit">天后</span></span><span class="ordinal">6 周年</span></div>
+          </div></div>
+        </div>
+        
+    <div class="tabbar">
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="5.4"/><ellipse cx="12" cy="12" rx="10.4" ry="4.1" transform="rotate(-24 12 12)"/></svg><span>星盘</span></div>
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.4" cy="6" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="18" r="1.25" fill="currentColor" stroke="none"/></svg><span>全部</span></div>
+      <div class="tab"><span class="tab-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);display:block;flex:none"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="7.6" r="4.1"/><path d="M4.6 20.6a7.4 7.4 0 0 1 14.8 0"/></svg><span>我的</span></div>
+    </div>
+      </div></div></div>
+  <figcaption><b>全部 · 按「还有多久」分段</b><span>不按创建时间排，按时间距离分段 —— 一眼知道该往下翻多远。已过去的另起一段压到最后：它们不再是提醒，是存档。</span></figcaption>
+</figure>
+
+<figure class="fig" data-slug="detail">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      <div class="topbar">
+        <span class="icon-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M15 4.5 7.5 12 15 19.5"/></svg></span>
+        <span class="spacer"></span>
+        <span class="icon-btn brand"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span>
+        <span class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M4.2 19.8h4l10.6-10.6-4-4L4.2 15.8z"/><path d="M13.6 6.4l4 4"/></svg></span>
+      </div>
+      <div class="safe" style="padding-top:0">
+        <div class="scroll" style="padding-bottom:32px">
+          <div class="hero">
+            <span class="hero-count">
+              <span class="hero-num" style="color:var(--amber)">12</span>
+              <span class="hero-unit" style="color:var(--amber)">天后</span>
+            </span>
+            <div class="title hero-name">结婚纪念日</div>
+            <span class="hero-ord">第 3 周年</span>
+          </div>
+
+          <div class="section" style="margin-top:0">
+            <div class="sec-head"><span class="sec-title">日期</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="info-row"><span class="meta info-lab">公历</span><span class="body info-val">2026年10月5日 · 周一</span></div>
+              <div class="info-row"><span class="meta info-lab">农历</span><span class="body info-val">八月廿五</span></div>
+              <div class="info-row"><span class="meta info-lab">周期</span><span class="body info-val">每年一次</span></div>
+              <div class="info-row"><span class="meta info-lab">起算</span><span class="body info-val">2023 年</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">标记</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="mark-row"><div class="mark-left"><span class="mark-dot" style="background:var(--brand)"></span><span class="body ink2">标记色</span></div><span class="meta ink3">这决定了它在圆盘上与列表里的颜色</span></div>
+              <div class="mark-row"><div class="mark-left"><span class="brand"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.7l6.1-.9z" fill="currentColor" stroke="none"/></svg></span><span class="body ink2">置顶</span></div><span class="meta ink3">已置顶</span></div>
+              <div class="mark-row"><div class="mark-left"><span class="brand"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/></svg></span><span class="body ink2">历法</span></div><span class="meta ink3">公历</span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">备注</span></div>
+            <div class="card card-pad" style="margin:0 17px">
+              <span class="body ink2" style="line-height:23px">今年想去海边过。已经订好了民宿，提前一天出发。</span>
+            </div>
+          </div>
+
+          <div class="gutter" style="margin-top:20px">
+            <span class="tag tag-brand"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="8.4"/><path d="M12 6.8v5.6l3.4 2"/></svg>12 天后，可以准备起来了</span>
+          </div>
+
+          <div class="btn-col">
+            <div class="btn"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M4.2 19.8h4l10.6-10.6-4-4L4.2 15.8z"/><path d="M13.6 6.4l4 4"/></svg>编辑</div>
+            <div class="btn btn-danger"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M4.6 7h14.8M9.8 7V4.4h4.4V7M6.6 7l1 13h8.8l1-13"/></svg>删除</div>
+          </div>
+        </div>
+      </div></div></div>
+  <figcaption><b>详情</b><span>大号倒计时占住上半屏，下面才是事实。公历与农历两个都列出来，不管当初用哪个历法建的。</span></figcaption>
+</figure>
+
+<figure class="fig" data-slug="compose">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      <div class="safe">
+        <div class="hdr">
+          <div class="hdr-row"><div class="display">记一笔</div></div>
+          <div class="hdr-sub">公历、农历，按年、按月、按周，都可以</div>
+        </div>
+
+        <div class="scroll">
+          <div class="gutter">
+            <div class="card card-pad">
+              <div class="form-row">
+                <span class="body form-lab">名字<span class="clay"> *</span></span>
+                <div class="form-content"><span class="form-input">比如：妈妈的生日</span></div>
+              </div>
+              <div class="form-row">
+                <span class="body form-lab">历法</span>
+                <div class="form-content">
+                  <div class="seg"><span class="on">公历</span><span>农历</span></div>
+                </div>
+              </div>
+              <div class="form-row">
+                <span class="body form-lab">周期</span>
+                <div class="form-content">
+                  <div class="seg"><span>一次</span><span class="on">每年</span><span>每月</span><span>每周</span></div>
+                </div>
+              </div>
+              <div class="form-row last">
+                <span class="body form-lab">日期</span>
+                <div class="form-content">
+                  <div class="date-row"><span class="body ink" style="font-weight:500">9月23日</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span></div>
+                </div>
+              </div>
+            </div>
+            <div style="margin:8px 4px 0;font-size:11.5px;line-height:17px;color:var(--ink3)">每年 9 月 23 日</div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">标记</span></div>
+            <div class="card card-pad" style="margin:0 17px">
+              <div class="tone-row">
+                <div class="tone-cell">
+                  <span class="tone-dot on" style="background:var(--brand)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M5 12.6l4.6 4.6L19 7.4"/></svg></span>
+                  <span class="tone-lab on">金</span>
+                </div><div class="tone-cell">
+                  <span class="tone-dot" style="background:var(--sage)"></span>
+                  <span class="tone-lab">青</span>
+                </div><div class="tone-cell">
+                  <span class="tone-dot" style="background:var(--amber)"></span>
+                  <span class="tone-lab">黄</span>
+                </div><div class="tone-cell">
+                  <span class="tone-dot" style="background:var(--clay)"></span>
+                  <span class="tone-lab">朱</span>
+                </div>
+              </div>
+              <div class="divider"></div>
+              <div class="switch-row">
+                <div class="switch-txt">
+                  <span class="body ink2">置顶</span>
+                  <span class="label ink4">常看的日子放上面，圆盘上的点也更大</span>
+                </div>
+                <span class="knob"><i></i></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">备注</span></div>
+            <div class="card card-pad" style="margin:0 17px">
+              <div class="note-box">想记的话、礼物清单、该提前准备什么…</div>
+            </div>
+          </div>
+
+          <div class="gutter" style="margin-top:20px">
+            <div class="btn btn-lg btn-primary">记下来</div>
+          </div>
+        </div>
+        
+    <div class="tabbar">
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="5.4"/><ellipse cx="12" cy="12" rx="10.4" ry="4.1" transform="rotate(-24 12 12)"/></svg><span>星盘</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.4" cy="6" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="18" r="1.25" fill="currentColor" stroke="none"/></svg><span>全部</span></div>
+      <div class="tab"><span class="tab-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);display:block;flex:none"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="7.6" r="4.1"/><path d="M4.6 20.6a7.4 7.4 0 0 1 14.8 0"/></svg><span>我的</span></div>
+    </div>
+      </div></div></div>
+  <figcaption><b>记一笔</b><span>只问三件事：叫什么、哪天、怎么重复。保存后回星盘而不是停在表单上 —— 看见它亮在盘上，才是这个应用的价值。</span></figcaption>
+</figure>
+
+<figure class="fig" data-slug="mine">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      <div class="safe">
+        <div class="scroll">
+          <div class="hdr">
+            <div class="hdr-row"><div class="display">我的</div></div>
+            <div class="hdr-sub">外观、数据与关于</div>
+          </div>
+
+          <div class="card" style="margin:4px 17px 0">
+            <div class="strip">
+              <div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">14</span>
+                <span class="strip-lab">日子</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">3</span>
+                <span class="strip-lab">农历</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">14</span>
+                <span class="strip-lab">盘上</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--brand)">2</span>
+                <span class="strip-lab">置顶</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">外观</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">主题</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val brand">玄夜 · 墨底暖金，最像旧历书</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">数据</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">回收站</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val ink3">空</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+              <div class="set-row"><span class="body ink2">备份与恢复</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val brand">还没备份过</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">关于</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">岁时</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val ink3">v1.2.0</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:22px;padding:0 40px;
+            font-size:11.5px;line-height:18px;color:var(--ink4)">
+            数据全部存在这台设备上，不上传、不需要账号。
+          </div>
+        </div>
+      </div>
+      
+    <div class="tabbar">
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="5.4"/><ellipse cx="12" cy="12" rx="10.4" ry="4.1" transform="rotate(-24 12 12)"/></svg><span>星盘</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.4" cy="6" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="18" r="1.25" fill="currentColor" stroke="none"/></svg><span>全部</span></div>
+      <div class="tab"><span class="tab-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);display:block;flex:none"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="7.6" r="4.1"/><path d="M4.6 20.6a7.4 7.4 0 0 1 14.8 0"/></svg><span>我的</span></div>
+    </div></div></div>
+  <figcaption><b>我的</b><span>一屏装完「关于这台设备上怎么看」与「关于这份数据」。主题做成带色块的长列表，因为四套的差别主要在底色与金味。</span></figcaption>
+</figure>
+
+<figure class="fig" data-slug="theme">
+  <div class="shot"><div class="ph" style="--paper:#16140F;--canvas:#1C1A15;--surface:#242118;--surface2:#2A2620;--inset:#302C23;--ink:#F2EBDF;--ink2:#B5AA99;--ink3:#8A7F6E;--ink4:#5E5648;--line:#3A352B;--line2:#332F26;--line3:#2C2821;--brand:#C9985C;--brand-deep:#E0B47C;--brand-bg:#3A2F20;--sage:#8FA87C;--sage-bg:#2A3326;--amber:#D9A94E;--amber-bg:#3A3020;--clay:#D57C61;--clay-bg:#3B2822;--on-accent:#1C1A15;--pure:#FFFFFF;--scrim:rgba(0,0,0,0.60)">
+      
+      <div class="safe">
+        <div class="scroll">
+          <div class="hdr">
+            <div class="hdr-row"><div class="display">我的</div></div>
+            <div class="hdr-sub">外观、数据与关于</div>
+          </div>
+
+          <div class="card" style="margin:4px 17px 0">
+            <div class="strip">
+              <div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">14</span>
+                <span class="strip-lab">日子</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">3</span>
+                <span class="strip-lab">农历</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--ink)">14</span>
+                <span class="strip-lab">盘上</span>
+              </div><div class="strip-cell">
+                <span class="strip-val" style="color:var(--brand)">2</span>
+                <span class="strip-lab">置顶</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">外观</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">主题</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val brand">玄夜 · 墨底暖金，最像旧历书</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">数据</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">回收站</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val ink3">空</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+              <div class="set-row"><span class="body ink2">备份与恢复</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val brand">还没备份过</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="sec-head"><span class="sec-title">关于</span></div>
+            <div class="card" style="margin:0 17px">
+              <div class="set-row"><span class="body ink2">岁时</span>
+      <span style="display:flex;align-items:center;gap:2px;min-width:0">
+        <span class="body set-val ink3">v1.2.0</span><span class="chev"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 4.5 16.5 12 9 19.5"/></svg></span>
+      </span></div>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin-top:22px;padding:0 40px;
+            font-size:11.5px;line-height:18px;color:var(--ink4)">
+            数据全部存在这台设备上，不上传、不需要账号。
+          </div>
+        </div>
+      </div>
+      
+    <div class="tabbar">
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="12" r="5.4"/><ellipse cx="12" cy="12" rx="10.4" ry="4.1" transform="rotate(-24 12 12)"/></svg><span>星盘</span></div>
+      <div class="tab"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.4" cy="6" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="12" r="1.25" fill="currentColor" stroke="none"/><circle cx="4.4" cy="18" r="1.25" fill="currentColor" stroke="none"/></svg><span>全部</span></div>
+      <div class="tab"><span class="tab-plus"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="color:var(--on-accent);display:block;flex:none"><path d="M12 5v14M5 12h14"/></svg></span></div>
+      <div class="tab on"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><circle cx="12" cy="7.6" r="4.1"/><path d="M4.6 20.6a7.4 7.4 0 0 1 14.8 0"/></svg><span>我的</span></div>
+    </div>
+      <div class="scrim"></div>
+      <div class="sheet">
+        <div class="sheet-head">
+          <span class="title">主题</span>
+          <span class="sheet-close"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+        </div>
+        <div class="sheet-body">
+          
+          <div class="theme-row on">
+            <div class="swatch">
+              <span style="background:#16140F;flex:1.4"></span>
+              <span style="background:#242118;flex:1"></span>
+              <span style="background:#C9985C;flex:.8"></span>
+            </div>
+            <div class="theme-main">
+              <span class="body theme-name" style="color:var(--brand)">玄夜</span>
+              <span class="theme-note">墨底暖金，最像旧历书</span>
+            </div>
+            <span class="brand"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex:none"><path d="M5 12.6l4.6 4.6L19 7.4"/></svg></span>
+          </div>
+          <div class="theme-row">
+            <div class="swatch">
+              <span style="background:#0F1419;flex:1.4"></span>
+              <span style="background:#1C232B;flex:1"></span>
+              <span style="background:#8FB8D8;flex:.8"></span>
+            </div>
+            <div class="theme-main">
+              <span class="body theme-name" style="color:var(--ink)">苍青</span>
+              <span class="theme-note">墨蓝月白，夜最浓的一套</span>
+            </div>
+            
+          </div>
+          <div class="theme-row">
+            <div class="swatch">
+              <span style="background:#0F1512;flex:1.4"></span>
+              <span style="background:#1B241F;flex:1"></span>
+              <span style="background:#C8A96B;flex:.8"></span>
+            </div>
+            <div class="theme-main">
+              <span class="body theme-name" style="color:var(--ink)">墨玉</span>
+              <span class="theme-note">墨绿玉色，安静得最彻底</span>
+            </div>
+            
+          </div>
+          <div class="theme-row">
+            <div class="swatch">
+              <span style="background:#F7F4EF;flex:1.4"></span>
+              <span style="background:#FFFFFF;flex:1"></span>
+              <span style="background:#8C5A34;flex:.8"></span>
+            </div>
+            <div class="theme-main">
+              <span class="body theme-name" style="color:var(--ink)">素笺</span>
+              <span class="theme-note">暖米白配赭石棕，给白天的备选</span>
+            </div>
+            
+          </div>
+          <div class="sheet-hint">岁时不跟随系统深色。星盘只有在墨底上才亮得起来 —— 白天想用浅色，手动切到素笺即可。</div>
+          <div class="btn sheet-done">完成</div>
+        </div>
+      </div></div></div>
+  <figcaption><b>主题面板</b><span>三套深色是主场，素笺留给白天。岁时不跟随系统深色 —— 跟随会让同一个应用在白天与夜里变成两个东西。</span></figcaption>
+</figure>
+  </div>
+  <footer>
+    帧宽 412 × 915（与常见 Android 机型同宽，于是圆盘取到设计基准 340px）。<br>
+    星盘 / 全部 / 详情三屏在真机上本来就长过一屏（都是可滚动区），为使折叠线落在元素边界上，
+    这几屏的纵向间距比真机收紧 2~4px（见 <code>scripts/screens-page.cjs</code> 的 <code>FIT</code>）；结构、文案、色值不受影响。<br>
+    重新生成：<code>node_modules/.bin/tsc -p scripts/tsconfig.caltest.json &amp;&amp; node scripts/screens-page.cjs</code>，再用 readme-product-screens 的导出脚本出图。
+  </footer>
+</div>
+</body>
+</html>
